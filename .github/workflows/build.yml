@@ -1,0 +1,80 @@
+name: Build Installers
+
+on:
+  # Build on version tags
+  push:
+    tags: ["v*"]
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: UCBFaculty-macOS
+          - os: windows-latest
+            artifact: UCBFaculty-Windows
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction
+
+      - name: Build with PyInstaller
+        run: poetry run python scripts/build_app.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/UCBFaculty/
+          retention-days: 30
+
+  release:
+    name: Attach to Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download macOS build
+        uses: actions/download-artifact@v4
+        with:
+          name: UCBFaculty-macOS
+          path: UCBFaculty-macOS
+
+      - name: Download Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: UCBFaculty-Windows
+          path: UCBFaculty-Windows
+
+      - name: Create zip archives
+        run: |
+          cd UCBFaculty-macOS && zip -r ../UCBFaculty-macOS.zip . && cd ..
+          cd UCBFaculty-Windows && zip -r ../UCBFaculty-Windows.zip . && cd ..
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            UCBFaculty-macOS.zip
+            UCBFaculty-Windows.zip

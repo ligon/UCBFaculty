@@ -1,0 +1,65 @@
+[project]
+name = "ucbfaculty"
+# Version is derived from `git describe` at build time by
+# poetry-dynamic-versioning (see [tool.poetry-dynamic-versioning]
+# and [build-system] below).  The literal value here is a placeholder
+# that ships in sdists/wheels only when the build is not made from
+# a git checkout (e.g. installing a downloaded sdist without git).
+version = "0.0.0"
+description = "Faculty data for use by Berkeley's Academic Senate"
+authors = [
+    {name = "Ethan Ligon", email = "ligon@berkeley.edu"}
+]
+license = "AGPL-3.0-or-later"
+readme = "README.org"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.3.2",
+    "ligonlibrary>=0.1.6",
+    "pyyaml>=6.0.2,<7.0.0",
+    "gitpython>=3.1.45,<4.0.0",
+    "python-dateutil>=2.9.0,<3.0.0",
+    "Levenshtein>=0.27.3,<0.28.0",
+    "panel>=1.4.4,<2.0.0",
+    "openpyxl (>=3.1.5,<4.0.0)",
+    "pyarrow (>=23.0.0,<24.0.0)",
+    "tabulate (>=0.9.0,<0.10.0)",
+    "mcp (>=1.2.0,<2.0.0)",
+    "thefuzz (>=0.22.1,<0.23.0)",
+    "duckdb (>=1.1.0,<2.0.0)"
+]
+
+[project.scripts]
+ucbfaculty = "ucbfaculty.cli:main"
+ucbfaculty-mcp = "ucbfaculty.mcp_server:main"
+
+[tool.setuptools.package-data]
+ucbfaculty = ["spelling_dictionary.json"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+pipreqs = {version = "^0.5.0", python = ">=3.11,<3.13"}
+watchfiles = "^1.1.1"
+pyinstaller = {version = ">=6.0,<7.0", python = ">=3.11,<3.14"}
+
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.poetry-dynamic-versioning]
+# Inject a git-derived PEP 440 version at build time, so every wheel
+# carries its commit SHA in the local segment (e.g. 0.2.4.post20+gc839bfd).
+# This makes "is my install up to date?" debugging visual rather than
+# requiring a separate `git log` step.
+enable = true
+vcs = "git"
+style = "pep440"
+
+[build-system]
+requires = [
+    "poetry-core>=2.0.0,<3.0.0",
+    "poetry-dynamic-versioning>=1.4.0,<2.0.0",
+]
+build-backend = "poetry_dynamic_versioning.backend"

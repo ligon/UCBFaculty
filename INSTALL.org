@@ -1,0 +1,383 @@
+#+TITLE: UCBFaculty Installation Guide
+#+AUTHOR: Ethan Ligon
+#+DATE: 2026-02-08
+
+* About This Package
+
+The =ucbfaculty= package is intended for members of the UC Berkeley
+Academic Senate Committee on Committees and a small group of related
+users.  The package itself is open source and installable from PyPI,
+but it requires access to the private =RawData= repository --- which
+holds GPG-encrypted faculty data --- to do anything useful.  If you are
+not a current committee member, the application will install
+successfully but will have nothing to read.
+
+If you /are/ a current or incoming committee member, the rest of this
+guide walks you through the one-time setup.
+
+* Before You Begin
+
+You will need to complete a few steps /before/ you can install and use
+the application.  These only need to be done once.
+
+Please have the following ready, then email *Linda Corley*
+(=lindac@berkeley.edu=) with:
+
+1. Your *GitHub username* (see [[*Create a GitHub Account]]).
+2. Your *GPG public key* (see [[*GPG Key Pair]]).
+
+Linda will add you as a collaborator on the private =RawData=
+repository (which holds the encrypted faculty data files) and encrypt
+the confidential data files to your key.  You will receive a
+confirmation before proceeding to installation.
+
+* Create a GitHub Account
+
+If you do not already have one, sign up at https://github.com/join.
+A free account is sufficient.  Send your username to Linda.
+
+* GPG Key Pair
+
+GPG is used to encrypt and decrypt the confidential faculty data.  You
+need a personal key pair: the /public/ half is shared with Linda so she
+can encrypt files for you; the /private/ half stays on your machine
+and is used to decrypt them.
+
+** Check for an Existing Key
+
+You may already have a GPG key --- for example, if you use encrypted
+email or have signed Git commits.  To check:
+
+- *macOS:* Open *GPG Keychain* (installed with GPG Suite).  If you see
+  an entry with your =@berkeley.edu= address and a key icon, you
+  already have one.
+- *Windows:* Open *Kleopatra* (installed with Gpg4win).  Look under
+  *My Certificates* for a key with your =@berkeley.edu= address.
+- *Linux:*
+  #+begin_src sh
+  gpg --list-secret-keys your.email@berkeley.edu
+  #+end_src
+  If output appears, you have a key.  If it says nothing, you need to
+  generate one.
+
+If you already have a key, skip ahead to [[*Export and Send Your Public Key]].
+
+** Install GPG
+
+- *macOS:* Install [[https://gpgtools.org][GPG Suite]] (provides =gpg= and a GUI keychain).
+- *Windows:* Install [[https://gpg4win.org][Gpg4win]] (provides =gpg= and the Kleopatra GUI).
+- *Linux (Debian/Ubuntu):*
+  #+begin_src sh
+  sudo apt install gnupg
+  #+end_src
+- *Linux (Fedora):*
+  #+begin_src sh
+  sudo dnf install gnupg2
+  #+end_src
+
+** Generate Your Key
+
+*** macOS (GPG Keychain)
+
+GPG Suite includes *GPG Keychain*.  Open it and click *New*:
+- Enter your full name (as it appears in the campus directory).
+- Enter your =@berkeley.edu= email address.
+- Choose a passphrase --- you will enter it each time you launch the
+  app.
+- Accept the defaults for everything else and click *Generate Key*.
+
+*** Windows (Kleopatra)
+
+Gpg4win includes *Kleopatra*.  Open it and choose *New Key Pair*:
+- Select *Create a personal OpenPGP key pair*.
+- Enter your full name and =@berkeley.edu= email address.
+- Click *Advanced Settings* and ensure the key size is at least 3072
+  bits, then click *Create*.
+- Choose a passphrase when prompted.
+
+*** Linux (command line)
+
+#+begin_src sh
+gpg --full-generate-key
+#+end_src
+
+When prompted:
+- Key type: accept the default (RSA and RSA).
+- Key size: =3072= or =4096=.
+- Expiration: =0= (does not expire) is simplest.
+- Real name: your full name as it appears in the campus directory.
+- Email: your =@berkeley.edu= address.
+- Passphrase: choose something memorable --- you will enter it each
+  time you launch the app.
+
+** Export and Send Your Public Key
+
+*** macOS (GPG Keychain)
+
+In GPG Keychain, right-click your key and choose *Export*.  Make sure
+*Include secret key* is *unchecked*.  Save the file and email it to
+=lindac@berkeley.edu=.
+
+*** Windows (Kleopatra)
+
+In Kleopatra, right-click your key and choose *Export...*.  Save the
+file and email it to =lindac@berkeley.edu=.  (This exports only the
+public half by default.)
+
+*** Linux (command line)
+
+#+begin_src sh
+gpg --armor --export your.email@berkeley.edu
+#+end_src
+
+Copy the entire output (including the =-----BEGIN PGP PUBLIC KEY
+BLOCK-----= and =-----END PGP PUBLIC KEY BLOCK-----= lines) and email
+it to =lindac@berkeley.edu=.
+
+* Install Prerequisites
+
+You need three tools installed regardless of platform: *Python*
+(>=3.11), *Git*, and *GPG* (covered above).
+
+** macOS
+
+1. *Python 3.11+:* download from https://www.python.org/downloads/ and
+   run the installer.
+2. *Git:* install Xcode Command Line Tools:
+   #+begin_src sh
+   xcode-select --install
+   #+end_src
+   Or download from https://git-scm.com/download/mac.
+3. *GPG:* see [[*Install GPG]] above.
+
+** Windows
+
+1. *Python 3.11+:* download the Windows x64 installer from
+   https://www.python.org/downloads/.  *Check "Add Python to PATH"*
+   during installation.
+2. *Git:* install Git for Windows from
+   https://git-scm.com/download/win (defaults are fine).
+3. *GPG:* see [[*Install GPG]] above.
+
+** Linux
+
+Python 3.11+, Git, and GPG are likely already installed.  Verify with:
+
+#+begin_src sh
+python3 --version   # should be 3.11 or later
+git --version
+gpg --version
+#+end_src
+
+If Python is too old, see https://www.python.org/downloads/ or use
+your distribution's backports.
+
+* Authenticate with GitHub
+
+Git needs to be able to reach the private =RawData= repository.  Any
+*one* of the following methods is sufficient --- pick whichever fits
+your machine.  *Method 1 (=gh auth login=) is recommended* if you can
+install =gh=; it is the smoothest path on every platform.
+
+** Method 1: GitHub CLI (=gh=, recommended)
+
+Install =gh= once, log in once, and Git will cache your credentials
+automatically across every command.
+
+#+begin_src sh
+# macOS
+brew install gh          # or download from https://cli.github.com
+
+# Windows --- download installer from https://cli.github.com
+
+# Linux (Debian/Ubuntu)
+sudo apt install gh      # or see https://cli.github.com
+#+end_src
+
+Then:
+
+#+begin_src sh
+gh auth login
+#+end_src
+
+Choose *GitHub.com* as the host, *HTTPS* as the protocol, and *Login
+with a web browser* when prompted.  =gh= will display a one-time code
+and open a browser; copy the code in to finish.  After that, Git can
+reach the =RawData= repository without further prompts.
+
+** Method 2: Personal Access Token (fallback)
+
+Use this if you cannot install =gh= --- for example, on a locked-down
+institutional machine without administrator privileges.
+
+1. Sign in to GitHub and go to
+   https://github.com/settings/tokens.
+2. Click *Generate new token (classic)*, give it a name like
+   =ucbfaculty=, and grant it the =repo= scope.
+3. Copy the token somewhere safe --- you will not see it again.
+
+When Git prompts for a password during the first =git clone= or =git
+pull=, enter your *GitHub username* as the username and *paste the
+token* in place of a password.  macOS Keychain, Windows Credential
+Manager, and the Linux libsecret helper will cache it for you
+automatically; you will not be asked again.
+
+** Method 3: SSH key
+
+If you already use SSH keys for GitHub (or are comfortable generating
+them), this avoids password prompts entirely:
+
+#+begin_src sh
+ssh-keygen -t ed25519 -C "your.email@berkeley.edu"
+cat ~/.ssh/id_ed25519.pub                # add this output at
+                                         # https://github.com/settings/keys
+#+end_src
+
+When the setup wizard asks for the repository URL, replace the
+default HTTPS URL with =git@github.com:ligon/RawData.git=.
+
+* Install the Application
+
+There are two ways to install UCBFaculty.  Choose the one that fits
+your needs.
+
+** Option A: Pre-built binary (easiest)
+
+A maintainer may provide a ready-to-run executable for macOS or
+Windows.  If you have received one:
+
+- *No other software required* (besides GPG and Git, covered above).
+  Python is bundled inside the binary.
+- Double-click (or run from the terminal) to launch.
+- Upgrades require downloading a new binary from the maintainer.
+
+*Limitations:* You only get the web-based UI.  The =ucbfaculty=
+Python library is not available for scripting or use by other tools.
+
+** Option B: Install as a Python package (more flexible)
+
+This installs =ucbfaculty= as both a command-line application /and/ a
+Python library.  It requires *Python 3.11+* (see [[*Install Prerequisites]]).
+
+Advantages over the pre-built binary:
+
+- The full =ucbfaculty= Python library is importable, so you (or an
+  LLM coding assistant such as Claude or ChatGPT) can write scripts
+  against the data --- for example, building custom reports or running
+  ad-hoc queries.
+- Upgrades are a single command.
+- Works on Linux, macOS, and Windows.
+
+*** Using =pipx= (recommended)
+
+=pipx= installs Python applications in isolated environments with a
+single command.
+
+#+begin_src sh
+# Install pipx if you don't have it
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath    # adds ~/.local/bin to your PATH
+#+end_src
+
+Then install UCBFaculty from PyPI:
+
+#+begin_src sh
+pipx install ucbfaculty
+#+end_src
+
+This gives you the =ucbfaculty= command.  To upgrade later:
+
+#+begin_src sh
+pipx upgrade ucbfaculty
+#+end_src
+
+*** From a local clone
+
+If you prefer to work from the source tree directly:
+
+#+begin_src sh
+cd ~/UCBFaculty                  # or wherever you cloned the repo
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install .
+#+end_src
+
+* First Run
+
+Launch the app:
+
+#+begin_src sh
+ucbfaculty --show
+#+end_src
+
+If no configuration file exists yet, a *Setup Assistant* opens in your
+browser automatically.  It will:
+
+1. Check that GPG and a secret key are available.
+2. Show your public key (in case you still need to send it to Linda).
+3. Clone the private =RawData= repository (you may be prompted to
+   authenticate with GitHub).
+4. Write =~/.ucbfaculty/config.yaml= with the correct paths.
+
+After setup completes, restart the app:
+
+#+begin_src sh
+ucbfaculty --show
+#+end_src
+
+Enter your GPG passphrase on the splash screen to unlock the data.
+
+** Already have a RawData clone? Skip the wizard.
+
+If you obtained =RawData= some other way (a colleague handed you a
+copy, you cloned it manually with SSH, etc.), you can write the
+config file directly from the terminal --- no browser, no clone:
+
+#+begin_src sh
+ucbfaculty init --data-dir /path/to/RawData
+#+end_src
+
+If =RawData= lives at =~/RawData= or as a sibling of the UCBFaculty
+install, you can omit =--data-dir= and the command will find it
+automatically:
+
+#+begin_src sh
+ucbfaculty init
+#+end_src
+
+Either form writes =~/.ucbfaculty/config.yaml=, after which =ucbfaculty
+--show= will launch the real application instead of the wizard.
+
+* Subsequent Sessions
+
+#+begin_src sh
+ucbfaculty --show
+#+end_src
+
+That is all.  The Settings tab inside the app lets you pull new data
+(=git pull=) and adjust configuration without returning to the
+terminal.
+
+* Troubleshooting
+
+- *"No secret key" when decrypting:* Your GPG key is missing or was
+  generated under a different user account.  Re-run =gpg
+  --full-generate-key= and send the new public key to Linda.
+- *Git authentication fails:* Re-run =gh auth login=, or check that
+  your Personal Access Token has not expired.  See [[*Authenticate with GitHub]]
+  for non-=gh= options.
+- *Setup wizard's "Download & Configure" tab is blank, or its Finish
+  button stays greyed out:* run =ucbfaculty init= (or =ucbfaculty init
+  --data-dir PATH=) from the terminal to write the config file
+  directly.  See [[*Already have a RawData clone? Skip the wizard.]].
+- *Wrong data paths:* Edit =~/.ucbfaculty/config.yaml= or delete it
+  and re-run the app to get the Setup Assistant again.
+- *Port 5006 already in use:* Use =ucbfaculty --port 5007 --show= to
+  pick a different port.
+
+If you run into any other problems --- or if these steps do not resolve
+the issue --- please open an issue at
+https://github.com/ligon/UCBFaculty/issues.  Include a description of
+what went wrong and any error messages you see; we will help you get
+set up.

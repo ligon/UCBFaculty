@@ -1,0 +1,69 @@
+faculty.csv:
+  _authority_for:
+    - Email
+    - FullName
+    - LastName
+    - FirstName
+    - DeptCode
+    - DeptName
+    - UID
+  _years: ["2025-26"]
+
+past_committee_appointments.csv:
+  _authority_for:
+    - Appointment: !transform [Committee, ucbfaculty.transformations.correct_spelling]
+    - Role: !transform ["Appointment", ucbfaculty.transformations.correct_spelling]
+  _index:
+    - Year: !transform ["Academic Year", ucbfaculty.transformations.normalize_academic_year]
+    - FullName: !transform [[LastName, FirstName], ucbfaculty.transformations.fullname]
+  _year_range: "2023-2024"
+
+as_list.csv:
+  _authority_for:
+    - Affiliations
+  _index: Email
+  _years: ["2025-26"]
+
+coms_all_senate.xlsx:
+  _sheet: Sheet1
+  _authority_for:
+    - Division
+    - EmploymentCategory: !transform ["Employee Class - Desc", ucbfaculty.transformations.employment_category]
+  _index:
+    - FullName: !transform ["Employee Name", ucbfaculty.transformations.reversename]
+  _years: ["2025-26"]
+
+coms_senate_report.xlsx:
+  _sheet: Sheet1
+  _authority_for:
+    - Step: "Salary Step"
+  _index:
+    - Email
+  _years: ["2025-26"]
+
+volunteers.xlsx:
+  _authority_for:
+    - AnyCommittee: !transform [AnyCommittee, ucbfaculty.transformations.to_boolean]
+    - Choice1: !transform [Choice1, ucbfaculty.transformations.correct_spelling]
+    - Choice2: !transform [Choice2, ucbfaculty.transformations.correct_spelling]
+    - Choice3: !transform [Choice3, ucbfaculty.transformations.correct_spelling]
+    - Continue: !transform [Continue, ucbfaculty.transformations.to_boolean]
+  _index:
+    - Email
+  _years: ["2024-25", "2025-26"]
+  _sheets_are_years: true
+
+recwell.csv:
+  _authority_for:
+    - RecWellMember: !assign True
+  _index:
+    - Email
+  _years: ["2025-26"]
+
+senate_membership.csv:
+  _authority_for:
+    - Appointment: !transform [Committee, ucbfaculty.transformations.correct_spelling]
+    - Role: !transform ["Appointment", ucbfaculty.transformations.correct_spelling]
+  _index:
+    - FullName: !transform [[LastName, FirstName], ucbfaculty.transformations.fullname]
+  _years: ["2025-26"]

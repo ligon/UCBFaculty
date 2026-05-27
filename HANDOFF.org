@@ -1,0 +1,279 @@
+#+TITLE: UCBFaculty Publication Handoff
+#+AUTHOR: Sue (Claude Opus 4.7) with Ethan Ligon
+#+DATE: 2026-05-21
+
+* What this is
+
+A working handoff written at the end of a planning + execution session
+on 2026-05-21 (extended into 2026-05-22).  Six commits from Sue
+landed on the =UCBFaculty= mirror and two on =RawData= (see [[*Landed
+in this session]]).  Three remaining items in Phase 1 are gated on
+console work outside the agent's reach.  A separate identity-swap
+bug surfaced mid-session has been largely fixed; remaining work on
+it is captured under [[*Mancosu / Wallace email swap (mostly resolved)]].
+
+Independently, Ethan landed five commits during the same window
+adding macOS / Windows launcher infrastructure, an "About" card with
+diagnostic copy, and a poetry-dynamic-versioning setup --- summarised
+in [[*Ethan's parallel commits]] so the next agent sees the full
+picture.
+
+* The plan we converged on
+
+Move UCBFaculty's distribution off private GitHub onto a fully public
+PyPI release, while keeping the data repository (=RawData=) private on
+github.com.  Onboarding for the eight-or-so committee users continues
+to require a personal GitHub account + =gh auth login= + collaborator
+status on =RawData= --- but the package itself no longer requires any
+GitHub auth to install.
+
+Alternatives considered and rejected (see commit / chat history for
+reasoning):
+- Box / bConnected Drive for =RawData= --- adds streaming-vs-mirror
+  configuration failure modes; gives no benefit over =git pull= which
+  already works.
+- =github.berkeley.edu= (Enterprise GitHub + CalNet) --- SAML SSO
+  requires recurring re-authorization on every key/token after each
+  CalNet session expires; too much friction for committee users.
+- Public =RawData= --- ruled out on revocation grounds: a public
+  ciphertext store can never have access revoked from someone who has
+  already downloaded it; private repo bounds exposure to "people who
+  once had collaborator status."
+
+* Landed in this session
+
+| Hash       | Phase | What                                                |
+|------------+-------+-----------------------------------------------------|
+| =bae5a81=  | 0     | Ship =ucbfaculty/spelling_dictionary.json= (matches |
+|            |       | the =pyproject.toml= package-data declaration that  |
+|            |       | had been stale).                                    |
+| =7b969af=  | 2     | INSTALL.org rewrite: =gh auth login= first; PAT     |
+|            |       | fallback; PyPI install line; "About This Package"   |
+|            |       | intro section framing the audience.                 |
+| =498f3eb=  | 1.5   | =get_spelling_dictionary= falls back to the         |
+|            |       | packaged copy when no config / file exists.         |
+|            |       | =faculty_spellings= / =email_dictionary= still      |
+|            |       | fail loud (no sensitive defaults).  Four new tests. |
+| =4de19fb=  | 1.1   | =pyproject.toml= license: =Proprietary= →           |
+|            |       | =AGPL-3.0-or-later= (matches =LICENSE.org=).        |
+| =c839bfd=  | 1.2   | =pyproject.toml= dep: =ligonlibrary @ git+https://= |
+|            |       | → =ligonlibrary>=0.1.6= from PyPI.  Resolves to     |
+|            |       | 0.2.0; API-compatible (verified by inspecting       |
+|            |       | wheel symbols for both versions).                   |
+| =e731300=  | bug   | =new_feature._warn_on_email_canonicalisation_collision= |
+|            |       | logs WARNING when =rename(index=...)= would         |
+|            |       | collapse distinct =FullName= values to the same     |
+|            |       | canonical email.  Five regression tests.            |
+
+Plus two commits on the =RawData= mirror (private, separate repo):
+
+| Hash       | What                                                           |
+|------------+----------------------------------------------------------------|
+| =0582583=  | Add =mancosu@berkeley.edu= entry with                          |
+|            | =mancosu@socrates.berkeley.edu= as a still-working variant.    |
+| =5b1c0ed=  | Remove the =rjw@berkeley.edu / philo12a@berkeley.edu= entry    |
+|            | entirely --- =philo12a@berkeley.edu= is a course / role        |
+|            | mailbox and shouldn't normalise to any individual.             |
+
+All six UCBFaculty commits passed =poetry check= where applicable
+and the full fast test suite (388 passed at =e731300=, up from 383
+at session start; 2 pre-existing skips, 3 slow-deselected).
+
+* Phase 1 remaining (needs console / external work)
+
+** TODO Fresh public GitHub repo from squashed HEAD                    :gh:
+   :PROPERTIES:
+   :Phase: 1.3
+   :END:
+
+The current private =UCBFaculty= repo cannot be made public as-is.
+History contains real faculty data that was committed and later
+removed but is still retrievable via the git object store --- see the
+audit findings in the chat transcript for the full list.  Specifically
+identified offending blobs include:
+
+- =RawData/*.csv= and =RawData/*.xlsx= snapshots in commits prior to
+  =db907b0 Separate data from package.= (notably =RawData/COMS - Full
+  Professors and Step 08272025.xlsx= --- "Step" is a salary-tier
+  proxy).
+- =vice_chair_candidates.csv= and =scripts/past_division_chairs.txt=
+  in commits =ebce653=, =5222297=, =5af183c= --- 48+ named individuals
+  from candidate analyses.
+
+Plan: create a brand-new public repo with a single squashed commit
+from current =HEAD= (which is clean modulo the items below).  Keep
+the existing private repo as the historical archive.
+
+Concrete steps:
+
+#+begin_src sh
+# In a fresh worktree of the current branch:
+git checkout --orphan publish-staging
+git commit -m "ucbfaculty: initial public release"
+gh repo create ligon/ucbfaculty --public --description "..."
+git remote add public git@github.com:ligon/ucbfaculty.git
+git push -u public publish-staging:main
+#+end_src
+
+Verify post-push that =git log --all= on the public clone shows
+exactly one commit and no large objects exist in the pack
+(=git verify-pack -v .git/objects/pack/*.idx | sort -k3 -n -r | head=).
+
+** TODO PyPI account + first =poetry publish=                       :pypi:
+   :PROPERTIES:
+   :Phase: 1.4
+   :END:
+
+Prerequisites:
+- PyPI account with 2FA enabled (mandatory since 2024).
+- Trusted Publisher configured for the GitHub Actions workflow,
+  OR an API token if publishing manually.
+
+Concrete steps:
+
+#+begin_src sh
+poetry build                                # produces dist/*.whl, dist/*.tar.gz
+poetry publish                              # interactive; uses ~/.pypirc or env
+#+end_src
+
+Version is now derived from git tags via =poetry-dynamic-versioning=
+(Ethan's =d28f0f8=).  The literal =version = "0.0.0"= in
+=pyproject.toml= is a placeholder for sdists built outside a git
+checkout; live builds use =git describe=.  Tag the release first:
+
+#+begin_src sh
+git tag -a v0.3.0 -m "first public release"
+poetry build                                # version comes from the tag
+poetry publish
+#+end_src
+
+A bumped =0.3.0= is a reasonable marker for "this is the public
+debut"; =0.2.x= already existed privately so it would not read as a
+clear milestone.
+
+After the package is on PyPI, sanity-check by installing into a
+throwaway venv:
+
+#+begin_src sh
+python3 -m venv /tmp/ucbfaculty-sanity
+/tmp/ucbfaculty-sanity/bin/pip install ucbfaculty
+/tmp/ucbfaculty-sanity/bin/python -c "from ucbfaculty.spelling import spell; print(spell('First Name'))"
+# expected: FirstName  (packaged-fallback works without RawData)
+#+end_src
+
+** TODO Update INSTALL.org "From a local clone" repo URL              :doc:
+   :PROPERTIES:
+   :Phase: 1.6
+   :END:
+
+INSTALL.org's "From a local clone" subsection currently says
+=cd ~/UCBFaculty= without specifying where the user got the clone
+from.  Once the public repo from Phase 1.3 exists, add the public
+URL explicitly:
+
+#+begin_src sh
+git clone https://github.com/ligon/ucbfaculty.git ~/UCBFaculty
+cd ~/UCBFaculty
+#+end_src
+
+Small follow-up; deliberately left for after the repo URL is settled.
+
+* Mancosu / Wallace email swap (mostly resolved)                    :bug:
+
+Surfaced on 2026-05-21 in the Faculty Lookup tab: Paolo Mancosu's row
+(2025-26 Chair, Philosophy) displayed =rjw@berkeley.edu=, which is
+R. Jay Wallace's personal address.
+
+** Diagnosis
+
+The email-canonicalisation dictionary at
+=RawData/email_dictionary.json= (previously line 5) mapped
+=philo12a@berkeley.edu= as a variant of =rjw@berkeley.edu=.
+=philo12a@berkeley.edu= is the Philosophy 12A course / role mailbox,
+owned by whoever teaches the course at the time; aliasing it to one
+specific person's personal email bakes in a stale identity that
+misfires the moment the assignment changes.
+
+The mis-mapping was then applied by the canonicalisation code:
+- =merge_features.py:110= : =corrected = email_dictionary.inverse_d[email]=
+- =new_feature.py:543=    : =processed_df.rename(index=EMAIL_DICTIONARY.inverse_d)=
+
+When two source rows --- Wallace's =rjw@berkeley.edu= and Mancosu's
+=philo12a@berkeley.edu= --- both got rewritten to =rjw@berkeley.edu=,
+the index became non-unique.  Downstream lookups keyed by canonical
+email returned whichever row pandas resolved first, and the displayed
+Email column showed the canonical (=rjw=) regardless of which
+person's other fields survived the collision.
+
+** What landed
+
+1. *Data fix.*  =RawData= commits =0582583= (add Mancosu's canonical
+   entry) and =5b1c0ed= (remove the =rjw= / =philo12a= entry
+   entirely).  =philo12a@berkeley.edu= now passes through
+   un-canonicalised; records that reference it appear as-is rather
+   than silently inheriting any individual's identity.
+2. *Code defense.*  =UCBFaculty= commit =e731300=:
+   =_warn_on_email_canonicalisation_collision= logs at WARNING when
+   the rename produces duplicate index entries with distinct
+   FullName values.  Diagnostic, not corrective: the pipeline still
+   completes; the operator can see which identities collided.
+   Same-canonical same-FullName collisions stay silent (intended
+   outcome for one person with multiple email forms).
+
+** Still open
+
+- *Source verification.*  Nobody has actually opened the encrypted
+  source spreadsheet (likely =COMS - Senate faculty report
+  01202026.xlsx.gpg=) to confirm that Mancosu's row contained
+  =philo12a@berkeley.edu= as theorised.  If the theory holds, the
+  =RawData= fixes above resolved the immediate symptom.  If the
+  source row contains some *other* mis-aliased email, the same fix
+  pattern (remove the variant mapping, let the role mailbox stay as
+  itself) applies again --- but the warning from =e731300= will now
+  surface any future case loudly instead of silently.
+- *Audit other role mailboxes.*  The =rjw / philo12a= pair existed;
+  there may be other course-number or role mailboxes among the
+  remaining five dictionary entries that deserve the same scrutiny.
+  =faberb@berkeley.edu / benfaber@econ.berkeley.edu= and
+  =rhstanton@berkeley.edu / richard.stanton@berkeley.edu= look like
+  personal-email-variant pairs (safe); =tmhickey / soknebtunis= and
+  =kyriakos / kyriakos@me.berkeley.edu= could be either --- a quick
+  check would close that loop.
+
+* Ethan's parallel commits (2026-05-21 / 2026-05-22)
+
+Landed during the same window as Sue's work; not part of the
+publication plan but worth knowing about so they don't surprise the
+next reader of =git log=:
+
+| Hash       | What                                                          |
+|------------+---------------------------------------------------------------|
+| =d28f0f8=  | =pyproject.toml=: derive version from =git describe= via      |
+|            | =poetry-dynamic-versioning=.  See [[*Phase 1.4]] for           |
+|            | implications on the first PyPI publish.                       |
+| =818b8a6=  | =ucbfaculty/_diagnostics.py=: shared install-info blob plus   |
+|            | =--version= on both CLIs.                                     |
+| =d33ba01=  | =cli install-launcher= subcommand for a double-clickable      |
+|            | macOS =.app= bundle (no PyInstaller).                         |
+| =201de80=  | =apps/lookup=: persistent About card with version + "Copy     |
+|            | diagnostic" button.                                           |
+| =4c8ae3d=  | =cli install-launcher= extended to Windows via a Desktop      |
+|            | =.bat= shortcut.                                              |
+
+These changes give end users (the eight committee members + a few)
+a one-click launcher and a "what version am I running" surface.
+They do not change the Phase 1 publication plan, but Phase 1.4 must
+account for the dynamic-versioning behaviour (tag before build).
+
+* Notes for the next agent
+
+- The repo has a =gitnexus= index that's stale (last analysed
+  =2a85c26=, eleven commits behind as of this writing).  The
+  mirror's gitnexus DB is read-only --- re-indexing has to run on
+  the source repo at =/home/ligon/Packages/UCBFaculty=.
+- =stem_faculty_report.org= is untracked and predates this session;
+  do not include it in commits unless intentionally claiming it.
+- Workspace commit convention: terse =<scope>: <description>=
+  subject; AGPL co-author trailer for the agent; see commits
+  =bae5a81 .. e731300= for Sue's in-house style and
+  =d28f0f8 .. 4c8ae3d= for Ethan's parallel work.

@@ -1,0 +1,6 @@
+uid,sn,givenname,displayName,berkeleyedualternateid,berkeleyEduAffiliations,berkeleyEduPrimaryDeptUnit,berkeleyEduUnitHRDeptName,success,errorMessage
+900001,Smith,Alice,Alice B Smith,asmith@berkeley.edu,EMPLOYEE-TYPE-ACADEMIC,ABCDE,Economics,T,
+900002,Jones,Robert,Robert C Jones,rjones@berkeley.edu,EMPLOYEE-TYPE-ACADEMIC,FGHIJ,Mathematics,T,
+900003,Garcia,Maria,Maria L Garcia,mgarcia@berkeley.edu,EMPLOYEE-TYPE-ACADEMIC,KLMNO,English,T,
+900004,Chen,David,David W Chen,dchen@berkeley.edu,EMPLOYEE-TYPE-ACADEMIC,PQRST,Physics,T,
+900005,Patel,Sunita,Sunita R Patel,spatel@berkeley.edu,EMPLOYEE-TYPE-ACADEMIC,UVWXY,Chemistry,T,

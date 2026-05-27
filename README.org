@@ -1,0 +1,93 @@
+#+TITLE: UCB Faculty Utilities
+
+* Launching the Panel Lookup App
+
+This package ships with a CLI entry point that mirrors the manual
+``panel serve`` invocation, so you can spin up the UI with:
+
+#+begin_src sh
+poetry run ucbfaculty --show
+#+end_src
+
+- ``--show`` pops a browser window; omit it if you only need the terminal log.
+- ``--no-autoreload`` disables live reload (enabled by default to match ``panel serve --autoreload``).
+- ``--port`` (default 5006) and ``--address`` let you host on a different interface.
+- ``panel`` is an alias for ``serve``, so ``poetry run ucbfaculty panel`` works too.
+
+* Makefile Shortcut
+
+If you prefer ``make`` muscle memory:
+
+#+begin_src sh
+make serve
+#+end_src
+
+That target simply runs ``poetry run ucbfaculty --show`` on your behalf.
+
+* Direct Panel Command
+
+When you need the raw Panel entry point—for example, to pass bespoke
+Panel options—call:
+
+#+begin_src sh
+poetry run panel serve ucbfaculty/apps/lookup.py --autoreload
+#+end_src
+
+The CLI route above automatically points to the same script and keeps
+your options tidy for everyday use.
+
+* Supplying the RawData Passphrase
+
+Encrypted inputs in =RawData/= require a GPG passphrase. Provide it on
+the command line:
+
+#+begin_src sh
+poetry run ucbfaculty -p "hunter2" --show
+#+end_src
+
+If =-p/--passphrase= is omitted, the passphrase is entered on the app
+splash screen by default (leave it blank if your datasets are not
+encrypted). Add =--prompt-passphrase= if you prefer the CLI prompt.
+
+Need a different config file (for example, to point at a sandbox data
+repo)?  Add =--config=/path/to/config.yaml= (or set
+=UCBFACULTY_CONFIG=).  The Panel app’s Settings tab exposes the same
+controls from inside the UI.
+
+* Config keys
+- =data_directory=: base path for RawData assets.
+- =features_yaml=: legacy FeatureBuilder spec (list or single path).
+- =feature_specs_yaml=: new Feature spec file for the Feature class (defaults to =RawData/features_spec.yaml=).
+- =sources_yaml=: source declarations powering the Feature class (defaults to =RawData/sources.yaml=).
+
+* Cross-Tab Row Selection
+
+While browsing feature tables or committee rosters, click any row to
+pop that faculty member into the **Faculty Lookup** tab—the app even
+auto-switches to that tab so their full profile is front and center.
+
+* Encrypting RawData Assets
+
+To generate =.gpg= versions of sensitive files for approved recipients,
+run the helper script. Patterns are resolved relative to your configured
+=RawData= directory:
+
+#+begin_src sh
+poetry run python scripts/encrypt_rawdata.py \
+  -r faculty-security@berkeley.edu \
+  RawData/2025-01\ All\ Senate\ Faculty.csv
+#+end_src
+
+Use multiple =-r= flags to target several keys, =--dest-dir= to drop the
+encrypted copies elsewhere, and =--armor= when you prefer ASCII output.
+
+* Settings Tab (Config + Sync)
+
+Open the **Settings** tab inside the Panel app to:
+
+- View or edit the active =config.yaml= (data directory, feature specs,
+  spelling dictionaries).  Saving regenerates the config file and applies
+  it immediately—just refresh the data tabs afterward.
+- Trigger a “Sync RawData Repository” action, which runs =git pull
+  --ff-only= inside the configured data directory and reports the result
+  in-place.

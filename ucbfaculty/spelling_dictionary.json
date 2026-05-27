@@ -1,0 +1,857 @@
+{
+  "Email": [
+    "Email Address",
+    "Berkeleyedualternateid",
+    "email",
+    "Berkeley Email Address",
+    "Business Email Address",
+    "Email"
+  ],
+  "FirstName": [
+    "What is your first name?",
+    "What Is Your First Name?",
+    "FIRST",
+    "First Name",
+    "Givenname",
+    "Namefirst",
+    "FirstName",
+    "First",
+    "Firstname"
+  ],
+  "LastName": [
+    "What is your last name?",
+    "What Is Your Last Name?",
+    "LAST",
+    "Last Name",
+    "Sn",
+    "Namelast",
+    "LastName",
+    "Last",
+    "Lastname"
+  ],
+  "FullName": [
+    "Full Name",
+    "Displayname",
+    "Namedisplay",
+    "FullName",
+    "Fullname"
+  ],
+  "DeptName": [
+    "Dept",
+    "Department",
+    "Department Name",
+    "Berkeleyeduunithrdeptname",
+    "L4 Department Desc",
+    "DeptName",
+    "Deptname"
+  ],
+  "DeptCode": [
+    "Berkeleyeduprimarydeptunit",
+    "DeptCode",
+    "Deptcode"
+  ],
+  "Division": [
+    "L3 Division Desc",
+    "Division"
+  ],
+  "UID": [
+    "uid",
+    "UID",
+    "Uid",
+    "UID"
+  ],
+  "Affiliations": [
+    "Berkeleyeduaffiliations",
+    "Affiliations"
+  ],
+  "Emeritus": [
+    "Emeriti",
+    "Emeriti Status",
+    "Emeritus"
+  ],
+  "Choice1": [
+    "First.1",
+    "1St Committee Choice",
+    "Choice 1",
+    "Choice1"
+  ],
+  "Choice2": [
+    "Second",
+    "2Nd Committee Choice",
+    "Choice 2",
+    "Choice2"
+  ],
+  "Choice3": [
+    "Third",
+    "3Rd Committee Choice",
+    "Choice 3",
+    "Choice3"
+  ],
+  "AnyCommittee": [
+    "Any",
+    "Any Committee",
+    "Willing To Be On Any Committee",
+    "AnyCommittee",
+    "Anycommittee"
+  ],
+  "Role": [
+    "New Role",
+    "Role"
+  ],
+  "Committee": [
+    "New Assignment",
+    "Committee"
+  ],
+  "ACFR": [
+    "Academic Freedom (ACFR)",
+    "Academic Freedom (Acfr)",
+    "Academic Freedom",
+    "ACFR",
+    "Acfr"
+  ],
+  "CAPRA": [
+    "Academic Planning and Resource Allocation (CAPRA)",
+    "Academic Planning And Resource Allocations (Capra)",
+    "Academic Planning and Resource Allocation",
+    "CAPRA",
+    "Academic Planning And Resource Allocation (Capra)",
+    "Academic Planning And Resource Allocation",
+    "Capra"
+  ],
+  "AEPE": [
+    "Admissions, Enrollment, and Preparatory Education (AEPE)",
+    "Committee On Admissions Enrollment, And Preparatory Education (Aepe)",
+    "Admissions, Enrollment, and Preparatory Education",
+    "AEPE",
+    "Admissions, Enrollment, And Preparatory Education (Aepe)",
+    "Admissions, Enrollment, And Preparatory Education",
+    "Aepe"
+  ],
+  "AMCULT": [
+    "American Cultures (AMCULT)",
+    "American Cultures (Coci Subcommittee On The Breadth Requirement In American Cultures)",
+    "American Cultures",
+    "AMCULT",
+    "American Cultures (Amcult)",
+    "Amcult"
+  ],
+  "AREP": [
+    "Assembly Representation (AREP)",
+    "Assembly Representation",
+    "AREP",
+    "Assembly Representation (Arep)",
+    "Arep"
+  ],
+  "BIR": [
+    "Budget And Interdepartmental Relations (Bir, Or The Budget Committee)",
+    "Budget and Interdepartmental Relations",
+    "Budget Committee",
+    "Budget and Interdepartmental Relations (BIR)",
+    "BIR",
+    "Budget And Interdepartmental Relations",
+    "Budget And Interdepartmental Relations (Bir)",
+    "Bir"
+  ],
+  "COMS": [
+    "Committees (COMS)",
+    "Committee on Committees",
+    "Committee On Committees (Coms)",
+    "Committees",
+    "COMS",
+    "Committees (Coms)",
+    "Committee On Committees",
+    "Coms"
+  ],
+  "CIT": [
+    "Computing and Information Technology (CIT)",
+    "Computing and Information Technology",
+    "CIT",
+    "Computing And Information Technology (Cit)",
+    "Computing And Information Technology",
+    "Cit"
+  ],
+  "COCI": [
+    "Courses of Instruction (COCI)",
+    "Courses of Instruction",
+    "COCI",
+    "Courses Of Instruction (Coci)",
+    "Courses Of Instruction",
+    "Coci"
+  ],
+  "DSA": [
+    "Demonstrations and Student Actions (DSA)",
+    "Demonstrations and Student Actions",
+    "DSA",
+    "Demonstrations And Student Actions (Dsa)",
+    "Demonstrations And Student Actions",
+    "Dsa"
+  ],
+  "DECC": [
+    "Diversity, Equity, and Campus Climate (DECC)",
+    "Diversity,  Equity, & Campus Climate (Decc)",
+    "Diversity, Equity, and Campus Climate",
+    "DECC",
+    "Diversity, Equity, And Campus Climate (Decc)",
+    "Diversity, Equity, And Campus Climate",
+    "Decc"
+  ],
+  "DIVCO": [
+    "Divisional Council (DIVCO)",
+    "Divisional Council",
+    "Berkeley Division",
+    "DIVCO",
+    "Divisional Council (Divco)",
+    "Divco"
+  ],
+  "FACL": [
+    "Faculty Athletics Council (FACL)",
+    "Faculty Athletics Council",
+    "FACL",
+    "Faculty Athletics Council (Facl)",
+    "Facl"
+  ],
+  "FAC": [
+    "Faculty Awards (FAC)",
+    "Faculty Awards And Lectures (Fac)",
+    "Faculty Awards",
+    "FAC",
+    "Faculty Awards (Fac)",
+    "Fac"
+  ],
+  "FAL": [
+    "Faculty Awards And Lectures (Fal)",
+    "Faculty Awards And Lectures",
+    "Faculty Awards and Lectures",
+    "Faculty Awards and Lectures (FAL)",
+    "FAL",
+    "Fal"
+  ],
+  "FWEL": [
+    "Faculty Welfare (FWEL)",
+    "Faculty Welfare",
+    "FWEL",
+    "Faculty Welfare (Fwel)",
+    "Fwel"
+  ],
+  "FRL": [
+    "Faculty Research Lecture (FRL)",
+    "Faculty Research Lecture (Frl)",
+    "Faculty Research Lecture",
+    "FRL",
+    "Frl"
+  ],
+  "GC": [
+    "Graduate Council (GC)",
+    "Graduate Council",
+    "GC",
+    "Graduate Council (Gc)",
+    "Gc"
+  ],
+  "LIBR": [
+    "Library (LIBR)",
+    "Library",
+    "LIBR",
+    "Library (Libr)",
+    "Libr"
+  ],
+  "CMR": [
+    "Memorial Resolutions (CMR)",
+    "Memorial Resolution (Cmr)",
+    "Memorial Resolutions",
+    "Memorial Resolution",
+    "CMR",
+    "Memorial Resolutions (Cmr)",
+    "Cmr"
+  ],
+  "POC": [
+    "Panel of Counselors (POC)",
+    "Panel of Counselors",
+    "POC",
+    "Panel Of Counselors (Poc)",
+    "Panel Of Counselors",
+    "Poc"
+  ],
+  "P&T": [
+    "Privilege and Tenure (PT)",
+    "PT",
+    "Privilege & Tenure (P&T)",
+    "Privilege and Tenure",
+    "P&T",
+    "Privilege And Tenure (Pt)",
+    "Pt",
+    "Privilege And Tenure"
+  ],
+  "PRIZ": [
+    "Prizes (PRIZ)",
+    "Prizes",
+    "PRIZ",
+    "Prizes (Priz)",
+    "Priz"
+  ],
+  "COR": [
+    "Research (COR)",
+    "Committee On Research (Cor)",
+    "Committee On Research",
+    "Committee on Research",
+    "Research",
+    "COR",
+    "Research (Cor)",
+    "Cor"
+  ],
+  "R&E": [
+    "Rules and Elections (RE)",
+    "RE",
+    "Rules & Elections",
+    "Rules And Elections (R&E)",
+    "Rules and Elections",
+    "R&E",
+    "Rules And Elections (Re)",
+    "Re",
+    "Rules And Elections"
+  ],
+  "COT": [
+    "Teaching (COT)",
+    "Committee On Teaching",
+    "Committee on Teaching",
+    "Teaching",
+    "COT",
+    "Teaching (Cot)",
+    "Cot"
+  ],
+  "UGC": [
+    "Undergraduate Council (UGC)",
+    "Undergraduate Council (Ugc)",
+    "Undergraduate Council",
+    "UGC",
+    "Ugc"
+  ],
+  "CUSHFA": [
+    "Undergraduate Scholarships, Honors, and Financial Aid (CUSHFA)",
+    "Undergraduate Scholarships, Honors, and Financial Aid",
+    "CUSHFA",
+    "Undergraduate Scholarships, Honors, And Financial Aid (Cushfa)",
+    "Undergraduate Scholarships, Honors, And Financial Aid",
+    "Cushfa"
+  ],
+  "A&H": [
+    "Arts & Humanities",
+    "A&H"
+  ],
+  "BIOSCI": [
+    "Biological Sciences",
+    "BIOSCI",
+    "Biosci"
+  ],
+  "CED": [
+    "Ced",
+    "College of Environmental Design",
+    "CED",
+    "College Of Environmental Design"
+  ],
+  "PHYSCI": [
+    "Physical Sciences",
+    "PHYSCI",
+    "Physci"
+  ],
+  "SOCSCI": [
+    "Social Sciences",
+    "SOCSCI",
+    "Socsci"
+  ],
+  "Member": [
+    "Member",
+    "member"
+  ],
+  "Chair": [
+    "Chair",
+    "chair"
+  ],
+  "Vice Chair": [
+    "Vice_Chair",
+    "Vice Chair",
+    "Division Vice Chair",
+    "vice_chair",
+    "vice chair"
+  ],
+  "Ex Officio": [
+    "Exofficio",
+    "Ex Officio",
+    "Ex-Officio",
+    "exofficio",
+    "ex officio",
+    "Ex officio"
+  ],
+  "Co-Chair": [
+    "Co_Chair",
+    "Co-Chair",
+    "co_chair",
+    "Co-chair"
+  ],
+  "Elected": [
+    "Electd",
+    "Elected",
+    "electd",
+    "elected"
+  ],
+  "Alternate": [
+    "Alternate",
+    "First Alt",
+    "Campus Rep Alt",
+    "alternate",
+    "first alt",
+    "campus rep alt"
+  ],
+  "Campus Rep": [
+    "Campus Rep",
+    "Uc Berkeley Rep",
+    "campus rep",
+    "UC Berkeley rep"
+  ],
+  "Parliamentarian": [
+    "Parliamentarian",
+    "parliamentarian"
+  ],
+  "Secretary": [
+    "Secretary",
+    "Division Secretary",
+    "secretary",
+    "division secretary"
+  ],
+  "Lead": [
+    "Lead",
+    "lead"
+  ],
+  "Haas Core": [
+    "Haas Core",
+    "Haas Core Programs"
+  ],
+  "Molecular & Cell Biology": [
+    "Molecular & Cell Biology"
+  ],
+  "Law": [
+    "Law"
+  ],
+  "Math": [
+    "Math",
+    "Mathematics"
+  ],
+  "English": [
+    "English"
+  ],
+  "Physics": [
+    "Physics"
+  ],
+  "History": [
+    "History"
+  ],
+  "Computer Sci": [
+    "Computer Sci",
+    "Computer Science",
+    "Comp Sci Div Operations"
+  ],
+  "Civil & Envir Eng": [
+    "Civil & Envir Eng",
+    "Civil & Environmental Engineering",
+    "Civil & Environ Engineer"
+  ],
+  "Electrical Eng & Computer Sci": [
+    "Electrical Eng & Computer Sci",
+    "Electrical Engineering & Computer Sciences",
+    "Elect Eng  Div Operations",
+    "Elec Engr & Computer Sc"
+  ],
+  "Chemistry": [
+    "Chemistry",
+    "Dept Of Chemistry"
+  ],
+  "PoliSci": [
+    "PoliSci",
+    "Political Sci",
+    "Political Science"
+  ],
+  "Integrative Biology": [
+    "Integrative Biology"
+  ],
+  "Economics": [
+    "Economics"
+  ],
+  "Mechanical Eng": [
+    "Mechanical Eng",
+    "Mechanical Engineering"
+  ],
+  "Public Health": [
+    "Public Health",
+    "Public Health Admin",
+    "Public Health Administration"
+  ],
+  "Psychology": [
+    "Psychology"
+  ],
+  "Education": [
+    "Education",
+    "School of Education"
+  ],
+  "Arch": [
+    "Arch",
+    "Architecture",
+    "Dept of Architecture"
+  ],
+  "Sociology": [
+    "Sociology"
+  ],
+  "Plant & Microbial Biology": [
+    "Plant & Microbial Biology"
+  ],
+  "Anthropology": [
+    "Anthropology"
+  ],
+  "ESPM Ecosystem Sci": [
+    "ESPM Ecosystem Sci",
+    "ESPM Ecosystem Sciences",
+    "ESPM ECOSYSTEM SCIENCES DIV",
+    "ESPM: Ecosytem Sciences Divisi"
+  ],
+  "Earth & Planetary Sci": [
+    "Earth & Planetary Sci",
+    "Earth & Planetary Science"
+  ],
+  "Optometry": [
+    "Optometry",
+    "School of Optometry Dean",
+    "Optometry Clinic"
+  ],
+  "City & Regional Planning": [
+    "City & Regional Planning"
+  ],
+  "Music": [
+    "Music"
+  ],
+  "Chemical Eng": [
+    "Chemical Eng",
+    "Chemical Engineering",
+    "Dept of Chemical E"
+  ],
+  "Goldman School": [
+    "Goldman School",
+    "Goldman School of Public Policy",
+    "GSPP Department Ops"
+  ],
+  "Statistics": [
+    "Statistics"
+  ],
+  "Social Welfare": [
+    "Social Welfare",
+    "Dept of Social Welfare"
+  ],
+  "BioEng": [
+    "BioEng",
+    "Bioeng",
+    "Bioengineering",
+    "BIOE Dept Operations"
+  ],
+  "Industrial Eng & Operations Research": [
+    "Industrial Eng & Operations Research",
+    "Industrial Engineering & Operations Research",
+    "Industrial Eng & Ops Res"
+  ],
+  "Ethnic Studies": [
+    "Ethnic Studies"
+  ],
+  "Journalism": [
+    "Journalism",
+    "School of Journalism Dept"
+  ],
+  "Agricultural & Resource Economics": [
+    "Agricultural & Resource Economics",
+    "Agricultural Res Econ Pol"
+  ],
+  "Philosophy": [
+    "Philosophy"
+  ],
+  "East Asian Languages & Cultures": [
+    "East Asian Languages & Cultures",
+    "East Asian Languages & Cult"
+  ],
+  "Materials Sci & Eng": [
+    "Materials Sci & Eng",
+    "Materials Science & Engineering",
+    "Material Sci & Engineeri"
+  ],
+  "ESPM Organisms & Environment": [
+    "ESPM Organisms & Environment",
+    "ESPM ORGANISMS & THE ENVIRONMT"
+  ],
+  "Rhetoric": [
+    "Rhetoric"
+  ],
+  "Geography": [
+    "Geography"
+  ],
+  "Spanish & Portuguese": [
+    "Spanish & Portuguese"
+  ],
+  "NeuroSci": [
+    "NeuroSci",
+    "Neurosci",
+    "Neuroscience",
+    "Neuroscience Department",
+    "Helen Wills Neuroscience Inst"
+  ],
+  "Art History": [
+    "Art History"
+  ],
+  "Linguistics": [
+    "Linguistics"
+  ],
+  "Nuclear Eng": [
+    "Nuclear Eng",
+    "Nuclear Engineering"
+  ],
+  "Astronomy": [
+    "Astronomy"
+  ],
+  "CompLit": [
+    "CompLit",
+    "Comparative Literature"
+  ],
+  "Nutritional Sci & Toxicology": [
+    "Nutritional Sci & Toxicology",
+    "Nutritional Sciences & Toxicology",
+    "Nutritional Sci & Tox Dept"
+  ],
+  "Middle Eastern Languages & Cultures": [
+    "Middle Eastern Languages & Cultures",
+    "Middle Eastern Languages&Cltr"
+  ],
+  "Ancient Greek & Roman Studies": [
+    "Ancient Greek & Roman Studies"
+  ],
+  "School of Information": [
+    "School of Information",
+    "School of Info Operations"
+  ],
+  "French": [
+    "French"
+  ],
+  "German": [
+    "German"
+  ],
+  "Theater, Dance & Performance Studies": [
+    "Theater, Dance & Performance Studies",
+    "Theater, Dance & Perf Studies"
+  ],
+  "Art Practice": [
+    "Art Practice"
+  ],
+  "Landscape Arch & Envir Planning": [
+    "Landscape Arch & Envir Planning",
+    "Landscape Architecture & Environmental Planning",
+    "Landscape Arch & Envir Plng"
+  ],
+  "African American Studies": [
+    "African American Studies",
+    "African Am Studies"
+  ],
+  "South & Southeast Asian Studies": [
+    "South & Southeast Asian Studies",
+    "South & Southeast Asian Std"
+  ],
+  "Slavic Languages & Literatures": [
+    "Slavic Languages & Literatures",
+    "Slavic Languages & Literature"
+  ],
+  "ESPM Society & Environment": [
+    "ESPM Society & Environment",
+    "ESPM SOCIETY & ENVIRONMENT DIV"
+  ],
+  "Gender & Women's Studies": [
+    "Gender & Women's Studies",
+    "Gender and Women's Studies"
+  ],
+  "Scandinavian Languages": [
+    "Scandinavian Languages"
+  ],
+  "Film & Media": [
+    "Film & Media",
+    "Film and Media"
+  ],
+  "ESPM": [
+    "ESPM",
+    "Envir Sci, Policy & Mgmt",
+    "Environmental Science, Policy & Management",
+    "Environ Sci, Policy & Mgmt"
+  ],
+  "Italian Studies": [
+    "Italian Studies"
+  ],
+  "Demography": [
+    "Demography"
+  ],
+  "Computational Precision Health": [
+    "Computational Precision Health"
+  ],
+  "Computational Bio": [
+    "Computational Bio",
+    "Computational Biology",
+    "Ctr for Computational Bio"
+  ],
+  "Admin": [
+    "Admin",
+    "Administration"
+  ],
+  "Undergraduate Interdisciplinary Studies": [
+    "Undergraduate Interdisciplinary Studies",
+    "Undgrd Itdsc Stdies Tch & Lrn"
+  ],
+  "Dean's Office": [
+    "Dean's Office"
+  ],
+  "CNR Dean's Office": [
+    "CNR Dean's Office",
+    "CNR Office of the Dean"
+  ],
+  "Eng Research": [
+    "Eng Research",
+    "Engineering Research",
+    "COENG Engineering Research",
+    "Engineering Research Centers"
+  ],
+  "BioSci Dean's Office": [
+    "BioSci Dean's Office",
+    "Biological Sci Dean's Office",
+    "Biological Sciences Dean's Office",
+    "Biological Sc Dean's Off"
+  ],
+  "Eng Dean's Office": [
+    "Eng Dean's Office",
+    "Engineering Dean's Office",
+    "Col of Engin Dean's Office",
+    "Coleman Fung Institute-L5"
+  ],
+  "Interdisciplinary SocSci": [
+    "Interdisciplinary SocSci",
+    "Interdisciplinary Social Sci",
+    "Interdisciplinary Social Science",
+    "Interdiscipl SocSci Pgm"
+  ],
+  "Research Office": [
+    "Research Office",
+    "Research Immediate Office"
+  ],
+  "Chancellor's Office": [
+    "Chancellor's Office",
+    "Chancellor's Immediate Office"
+  ],
+  "SpaceSci Laboratory": [
+    "SpaceSci Laboratory",
+    "Space Sci Laboratory",
+    "Space Sciences Laboratory"
+  ],
+  "University Extension": [
+    "University Extension",
+    "Unex Academic Depts"
+  ],
+  "Inst of Personality & Social Research": [
+    "Inst of Personality & Social Research",
+    "Institute of Personality & Social Research",
+    "Inst of Personality & Soc Res"
+  ],
+  "Arts & Humanities Dean's Office": [
+    "Arts & Humanities Dean's Office",
+    "Arts & Humanities Dean's Off"
+  ],
+  "College of Chemistry Dean's Office": [
+    "College of Chemistry Dean's Office",
+    "Coll of Chem Dean"
+  ],
+  "Exec Vice Chancellor & Provost": [
+    "Exec Vice Chancellor & Provost",
+    "Executive Vice Chancellor & Provost",
+    "Exec Vice Chanc & Prov Dept"
+  ],
+  "GradDiv": [
+    "GradDiv",
+    "Graduate Division",
+    "Graduate Division Ops"
+  ],
+  "IGI": [
+    "IGI",
+    "Innovative Genomics Inst",
+    "Innovative Genomics Institute"
+  ],
+  "Cal EPA": [
+    "Cal EPA"
+  ],
+  "Othering & Belonging Inst": [
+    "Othering & Belonging Inst",
+    "Othering & Belonging Institute"
+  ],
+  "QB3": [
+    "QB3",
+    "QB3 Central"
+  ],
+  "Faculty Office": [
+    "Faculty Office",
+    "Faculty Immediate Office"
+  ],
+  "Inst for Envir Sci & Eng": [
+    "Inst for Envir Sci & Eng",
+    "Institute for Environmental Science & Engineering",
+    "Inst for Environ Sci & Engr"
+  ],
+  "CITRIS": [
+    "CITRIS"
+  ],
+  "Simons Inst": [
+    "Simons Inst",
+    "Simons Institute",
+    "Simons Institute TOC"
+  ],
+  "PhysSci Dean's Office": [
+    "PhysSci Dean's Office",
+    "Physical Sci Dean's Office",
+    "Physical Sciences Dean's Office",
+    "Physical Sc Dean's Off"
+  ],
+  "L&S Dean's Office": [
+    "L&S Dean's Office",
+    "L&S Deans' Office"
+  ],
+  "Herbaria": [
+    "Herbaria",
+    "University & Jepson Herbaria",
+    "University_Jepson Herbaria"
+  ],
+  "PhysEd": [
+    "PhysEd",
+    "Physical Education",
+    "Phys Ed Program"
+  ],
+  "Botanical Garden": [
+    "Botanical Garden",
+    "UC Botanical Garden"
+  ],
+  "Envir Design Dean's Office": [
+    "Envir Design Dean's Office",
+    "Environmental Design Dean's Office",
+    "Envir Design Dean's Off"
+  ],
+  "SocSci Dean's Office": [
+    "SocSci Dean's Office",
+    "Social Sci Dean's Office",
+    "Social Sciences Dean's Office",
+    "Social Science Dean's Off"
+  ],
+  "Undergraduate Education": [
+    "Undergraduate Education",
+    "Undergrad Edu Administration"
+  ],
+  "Senate Admin": [
+    "Senate Admin",
+    "Senate Administration"
+  ],
+  "SAFP": [
+    "SAFP",
+    "SAFP Admin_Operations"
+  ]
+}

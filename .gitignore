@@ -1,0 +1,17 @@
+__pycache__/
+.venv/
+.codex-user-last.json
+.coder-session/
+.claude/
+CLAUDE.local.md
+CLAUDE.md
+AGENTS.md
+*.egg-info/
+build/
+dist/
+*.spec
+.gitnexus
+.latex/
+stem_faculty_report.tex
+stem_faculty_report.pdf
+stem_faculty_report.html

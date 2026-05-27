@@ -1,0 +1,6 @@
+uid,nameLast,nameFirst,nameDisplay,email,berkeleyEduPrimaryDeptUnit,berkeleyEduUnitHRDeptName
+900001,Smith,Alice,Alice B Smith,asmith@berkeley.edu,ABCDE,Economics
+900002,Jones,Robert,Robert C Jones,rjones@berkeley.edu,FGHIJ,Mathematics
+900003,Garcia,Maria,Maria L Garcia,mgarcia@berkeley.edu,KLMNO,English
+900004,Chen,David,David W Chen,dchen@berkeley.edu,PQRST,Physics
+900005,Patel,Sunita,Sunita R Patel,spatel@berkeley.edu,UVWXY,Chemistry

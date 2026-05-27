@@ -1,0 +1,109 @@
+#+TITLE: Faculty Data Tool License
+#+SUBTITLE: Version 1.0 — AGPL-3.0-or-later WITH ENAFA-CA-1.3-addendum
+#+AUTHOR: Ethan Ligon
+#+STARTUP: showall
+
+* Preamble
+This software was developed by Ethan Ligon, a member of the faculty of
+the University of California, for the purpose of surfacing and
+analyzing data about faculty members and other academic personnel.
+Because such data may influence employment or service decisions, its
+use is subject to strict legal and ethical constraints.
+
+Accordingly, this project is released under the
+[[https://www.gnu.org/licenses/agpl-3.0.en.html][GNU Affero General Public License v3.0 (or later)]],
+supplemented by the *Employment Nondiscrimination and Academic Freedom
+Addendum (California v1.3)*.
+
+The Addendum introduces lawful-use restrictions ensuring that this
+software and any derivative works are employed only in compliance with:
+
+- Title VII of the Civil Rights Act of 1964 (as amended);
+- California Fair Employment and Housing Act (Gov’t Code §12940 et seq., as amended);
+- California Constitution Article I § 31 (Proposition 209); and
+- University of California Academic Personnel Manual (APM 010, 015, 035, *as each may be amended from time to time*).
+
+Future versions of the AGPL published by the Free Software Foundation
+are automatically incorporated under the “-or-later” clause, provided
+that this Addendum remains in force and continues to govern lawful use.
+
+The Addendum’s terms supersede any inconsistent permissions in the
+base AGPL license.  Redistribution or modification of this work is
+permitted only if this Addendum accompanies all copies and derivatives.
+
+* Base License
+#+BEGIN_QUOTE
+The following text is the full GNU Affero General Public License v3.0,
+as published by the Free Software Foundation, 19 November 2007.
+
+You may redistribute this work under either this version or, at your
+option, any later version published by the Free Software Foundation.
+#+END_QUOTE
+
+#+INCLUDE: "https://www.gnu.org/licenses/agpl-3.0.txt" src text
+
+* Employment Nondiscrimination and Academic Freedom Addendum (California v1.3)
+
+** 1  Scope
+This Addendum applies to any use of the Licensed Work in connection with
+evaluating, hiring, appointing, compensating, promoting, or otherwise making
+decisions about academic personnel. This includes, but is not limited to:
+
+- Faculty and other academic employee appointments;
+- Merit and promotion reviews; and
+- *Appointments to administrative committees and committees of the Academic Senate,*
+  which are recognized components of academic service and may bear on merit review and other personnel evaluations.
+
+** 2  Federal and State Compliance
+Users must employ the Licensed Work in full compliance with:
+
+- Title VII of the U.S. Civil Rights Act of 1964 (42 U.S.C. §§2000e et seq.);
+- California Fair Employment and Housing Act (Gov’t Code §12940 et seq.); and
+- All other applicable federal, state, and local laws prohibiting employment discrimination.
+
+These laws forbid discrimination based on race, color, religion, sex (including pregnancy,
+gender identity, and sexual orientation), national origin, ancestry, age,
+disability, medical condition, genetic information, marital status, and other protected characteristics.
+
+** 3  Data and Design Restrictions
+Developers and maintainers of derivative works must not introduce or enable the use of data,
+variables, or criteria that directly identify or classify individuals by characteristics protected under Section 2,
+*except where such information is demonstrably relevant and lawfully permissible as a bona fide occupational qualification* under applicable nondiscrimination law.
+
+For users and developers subject to California law, this restriction must be interpreted in accordance with:
+
+- California Proposition 209 (Cal. Const. Art. I § 31); and
+- The limited bona fide occupational qualification exception recognized by Title VII and the California FEHA.
+
+Permissible examples include only cases in which membership in a protected category is intrinsic to the legitimate duties of a specific appointment (e.g., service on a Committee on the Status of Women).  
+Any broader use of such characteristics in the design, implementation, or operation of the Work or its derivatives is prohibited.
+
+** 4  Political or Ideological Neutrality
+Use of the Licensed Work must conform to:
+
+- California Labor Code §§1101–1102 (prohibiting discrimination or interference with lawful political activity); and
+- UC APM-010 (Academic Freedom), APM-015 (Faculty Code of Conduct), and APM-035 (Affirmative Action and Nondiscrimination in Employment).
+
+Users must not employ the Work to advantage or disadvantage individuals because of their lawful political beliefs, affiliations, or expression.
+
+** 5  Academic Freedom
+Decisions informed by the Licensed Work must respect the principles of academic freedom as articulated in the AAUP 1940 Statement and UC APM-010.
+
+** 6  Certification
+By using this Work for any academic employment, appointment, or service-related purpose, you certify compliance with these provisions.
+
+** 7  Termination
+Any violation of this Addendum automatically terminates the license granted herein.
+
+** 8  Disclaimer
+This software is provided “as is,” without warranty of any kind.  The authors disclaim any liability arising from its use or misuse.
+
+** 9  Interpretation and Updating of References
+References in this Addendum to statutes, regulations, or University of California policies shall be understood to include those provisions *as they may be amended, renumbered, or succeeded from time to time.*  
+If any referenced authority is repealed or replaced, users shall interpret this Addendum to preserve its original intent: to ensure nondiscriminatory, lawful, and academically sound use of the Licensed Work in connection with academic employment or service decisions.
+
+#+BEGIN_CENTER
+SPDX-License-Identifier: AGPL-3.0-or-later WITH ENAFA-CA-1.3-addendum
+#+END_CENTER
+
+

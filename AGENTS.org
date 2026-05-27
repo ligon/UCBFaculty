@@ -1,0 +1,320 @@
+#+TITLE: Agent Operations Guide
+#+AUTHOR: UCBFaculty Maintainers
+#+OPTIONS: toc:nil num:nil
+
+* Purpose
+This guide translates the UCBFaculty project's collaboration norms into
+clear checklists for automated assistants (LLM agents, scripts, bots).
+It supplements human-focused notes spread across =notes.org=,
+=spelling.org=, and the repository’s Org literature by defining how
+non-human contributors should work safely with faculty data sources.
+
+* Scope and Related References
+- Treat =ucbfaculty/*.py= as the authoritative implementation.  Org
+  documents (=notes.org=, =spelling.org=) now serve as design notes only.
+- Respect paths specified in =~/.ucbfaculty/config.yaml=; do not hardcode
+  alternate locations for =RawData= assets or spelling dictionaries.
+- Human contributors should rely on commit history and upcoming README
+  drafts for narrative documentation; this file targets automation only.
+- Store agent-specific logs (if needed) under =notes.org=: keep them brief
+  and dated so they tangle cleanly.
+
+* Operating Principles
+1. **Data integrity first**: never overwrite, redact, or normalize files in
+   =RawData/= unless explicitly directed by a maintainer.
+2. **Stay in sync with Org**: update Org snippets for context when helpful,
+   but never overwrite the Python modules by re-tangling unless specifically
+   requested.
+3. **Configuration aware**: rely on =ucbfaculty.__init__= helpers (e.g.,
+   =get_data_dir=) instead of guessing file locations; agents must not
+   assume the presence of optional config entries.
+4. **Minimal surface area**: change only the files required for the task;
+   avoid reformatting or modernizing unrelated modules.
+5. **Reproducible output**: document every command used for validation so a
+   maintainer can replay it with =poetry run ...=.
+6. **Transparent authorship**: when preparing commits, append
+   =Co-authored-by: Assistant (Codex CLI)= in the message body so
+   automated work is obvious.
+7. **Email is the key**: treat Email as the canonical index for faculty
+   data; UID is sparse/inconsistent across sources. Do not reindex to UID
+   unless explicitly required.
+
+* Pre-Execution Checklist
+1. Confirm the local environment via =poetry install= (dependencies are
+   managed through Poetry).
+2. Inspect =~/.ucbfaculty/config.yaml= to ensure it points at the intended
+   =RawData= directory and YAML feature spec.
+3. If the task touches tangled code, run
+   =emacs --batch notes.org --eval '(org-babel-tangle)'= (and/or
+   =spelling.org=) before and after edits to keep Org ↔ Python in sync.
+4. Capture the current date/time with =date= for inclusion in handoff
+   notes or Org log headings.
+5. Note sandbox/network constraints announced in the session; halt if a
+   needed command would violate them.
+6. **User Context (coder)**: When running as user =coder= (home
+   =/home/coder=), expect configuration in =~/.ucbfaculty= and available
+   GPG keys. Rely on these for local environment setup.
+
+* Security & Authentication
+The package uses a "layered" security model to decrypt sensitive data in
+=RawData/=:
+
+1. **GPG Agent (Preferred)**: If =gpg-agent= has a cached passphrase, the
+   package automatically decrypts data without prompts.
+   - *Tip:* Prime the agent by decrypting any file in the shell first:
+     =gpg --decrypt ~/.ucbfaculty/RawData/some_file.gpg > /dev/null=.
+2. **System Keyring**: Checks for credentials stored in the OS keychain
+   under service =ucbfaculty=.
+3. **In-Memory/Explicit**: Checks for a passphrase set via CLI or Python API.
+
+**CLI Usage**
+- Prompt at startup: =python -m ucbfaculty --prompt-passphrase=
+- Pass explicitly: =python -m ucbfaculty --passphrase "secret"=
+
+**Scripting**
+Use helpers in =ucbfaculty.security= to manage sessions:
+#+begin_src python
+  from ucbfaculty import security
+  # Unlock and preset passphrase in gpg-agent
+  security.unlock_rawdata("secret")
+#+end_src
+
+* Allowed Commands and Tooling
+- Use =poetry run python ...= for quick checks; prefer inline scripts over
+  ad-hoc notebooks.
+- Employ =rg= for searching the codebase; avoid =find|grep= combinations
+  unless =rg= is unavailable.
+- Org tangling should rely on batch Emacs; do not introduce new tangling
+  scripts without maintainer approval.
+- Refrain from destructive Git commands (=git reset --hard=, =git clean=).
+  When Git reports corruption, stop and request human assistance.
+- Network access is enabled but should only fetch declared dependencies
+  (through Poetry) unless expressly authorized.
+
+* Collaboration Protocol
+- **Task Intake**: Restate the request, identify which Org blocks or Python
+  files you will touch, and flag uncertainties before editing.
+- **Progress Notes**: Record short bullet entries in handoff messages;
+  update the plan tool (if available) after completing each subtask.
+- **Handoff**: Summarize edits with file:line references (as in CLI
+  guidelines), list validation commands, and mention any remaining risks.
+- **Spelling Dictionaries**: When =ucbfaculty/spelling.py= adds variants,
+  update =RawData/spelling_dictionary.json= through the provided
+  dictionary API (=spelling.Dictionary.persist=) rather than manual edits.
+- **Feature Specs**: When modifying =RawData/features.yaml=, double-check
+  that new keys align with the FeatureBuilder expectations and document new
+  authorities or transforms in =notes.org=.
+
+* Testing and Validation
+- There is no dedicated test suite yet; run targeted sanity checks, e.g.:
+  =poetry run python -c "from ucbfaculty.feature_builder import FeatureBuilder; FeatureBuilder()['Email']"=.
+- For merge changes, exercise =merge_features= with representative series
+  and capture the command + sample output.
+- Validate that tangling regenerated expected modules by re-importing them
+  under =poetry run python=.
+- For Panel work, prefer =poetry run ucbfaculty= (defaults to autoreload) after confirming the external =RawData/= repo is populated; =poetry run panel serve ucbfaculty/apps/lookup.py --autoreload= remains a fallback.  Missing COMS CSVs or spelling dictionaries surface as blocking prompts—resolve or stub before handing off.  Tabs now include Faculty Lookup, Feature Explorer, and Committee Explorer.
+- When testing download buttons, ensure callbacks return =io.BytesIO= objects; other types trigger =FileDownload= transfer errors.
+- Panel layout tweaks must preserve scrollable =pn.pane.DataFrame= views for feature tables and keep sidebar widgets compact (≈1/6 width).  Verify that filters (division, employment categories) still yield results.
+
+* Incident Response
+- If a command fails because of missing data (e.g., absent spelling
+  dictionary), create the minimal placeholder from Org sources or ask for
+  maintainer guidance before proceeding.
+- Stop immediately upon encountering unexpected repository state (dirty
+  files you did not touch, Git corruption, etc.) and document the issue in
+  the handoff message.
+- When manual intervention adjusts configuration files, note the temp
+  change so humans can replicate or revert it.
+
+* Tacit Knowledge (ucbfaculty & committee-staffing pipelines)
+These learnings were discovered during a multi-hour staffing audit session
+(April 2026) and are not obvious from the code or docs alone.
+
+** Name resolution: use =FACULTY_NAME_DICTIONARY.spell()=
+- =ucbfaculty.spelling_dictionary= is a =PosixPath= (the JSON file path).
+- =ucbfaculty.spelling.dictionary= is a =dict= mapping feature names to
+  variant lists (e.g. FullName -> ["Full Name", "Displayname", ...]).
+- The object you actually want is =ucbfaculty.FACULTY_NAME_DICTIONARY= --- a
+  =Dictionary(defaultdict)= with an =inverse_d= lookup and a =.spell(name)=
+  method that resolves variant names to canonical forms.
+- For sheet-to-email matching, a good multi-fallback strategy is:
+  1. Direct casefold match against FullName feature.
+  2. =FACULTY_NAME_DICTIONARY.spell(name)= -> canonical -> FullName lookup.
+  3. =(last_name, DeptName)= pair lookup (drop collisions to stay honest).
+  4. Swapped first/last order (some tabs reverse them).
+  5. Strip trailing punctuation (=*=, =,=, =.=) before matching.
+
+** MCP server: prefer =query= + =describe= over fetching whole frames
+- The MCP server's primary path is the unified
+  =query(sql, output_path?, format?)= tool, backed by DuckDB over the
+  package's data sources.  Use it for any slicing, joining, or
+  aggregation rather than pulling whole frames into context.
+- Schema is introspectable: =describe()= lists views; =describe(view)=
+  returns columns + DuckDB types + row count.
+- Registered views (lazy --- registered on first SQL reference):
+  - =vitals= : faculty roster (one row per Email).
+  - =committees= : long-format committee history
+    =(Email, Year, Committee, Role, FullName, DeptName, YearStart)=.
+  - one view per feature in =available_features()=, with columns
+    =(Email, <FeatureName>)=.
+- Aggregations and joins return *results*, not source rows, so
+  context cost stays flat regardless of underlying data size:
+  =query("SELECT v.Division, COUNT(*) AS n FROM committees c JOIN vitals v
+  ON c.Email = v.Email WHERE c.YearStart >= 2023 GROUP BY v.Division
+  ORDER BY n DESC")=.
+- For genuinely-large results, pass =output_path= to spill to disk:
+  Parquet by default (typed, smaller, queryable directly), CSV via
+  =.csv= extension (text, eyeball-able via =Read=).  DuckDB reads
+  Parquet natively, so a follow-up
+  =query("SELECT ... FROM '/tmp/spill.parquet' ...")= Just Works
+  without inlining the spill.
+- Default response format is JSON; pass =format="org"= for
+  human-readable tables (and keep =format=json= for any LLM
+  consumer --- denser per token).
+- The Python API (=Feature("X")["history"]=, etc.) is still available
+  for in-process work; the MCP =query= layer delegates to it.
+
+** Appointment data: union multiple sources
+- =ucbfaculty.Feature("Appointment")["2025-26"]= draws from the Senate CSV
+  (=Senate Committee Membership AY25-26 - Sheet1.csv.gpg=).
+- The COMS working Google Sheet's left-side rosters are a separate source.
+- About 5% of members appear in only one source (~12 sheet-only, ~13
+  Appointment-only for 2025-26).  =unexploited_volunteers()= checks only
+  Appointment, so always union both sources when computing "appointed" sets.
+
+** COMS Google Sheet structure
+- The "living" workbook is an =.xlsx= that COMS edits in place; we read a
+  native-Sheet *copy* of it.  Each fresh snapshot is a delete-and-recopy,
+  which mints a *new sheet key* each time --- so the key is configuration,
+  not source.  Store it as =coms_sheet_key:= in =~/.ucbfaculty/config.yaml=
+  (consumers can also pass =--sheet-key= / =--sheet-url= or set
+  =$COMS_SHEET_KEY= to override).  The legacy AY25-26 key
+  (=1Cs1vaUkkLnM5UiNpr1_4eMfJhpgOHe-Swr9Xb89Tk7o=) is now a static artifact.
+- Each committee tab has TWO sections:
+  - Top: existing (left cols) + proposed (right cols) roster.
+  - Bottom: volunteer-choices sub-table starting with header
+    =[FIRST, LAST, DEPT, TITLE, CURRENT, CONTINUE, FIRST, SECOND, THIRD, ANY, CAN'T SERVE]=.
+  - Stop parsing at the secondary header to avoid mixing the two.
+- Some tabs (notably GC) have right-side data rows shifted one column left
+  of the header.  Detect by checking if the "LAST" column has role-like
+  strings ("Member", "Chair") rather than surnames.
+- The "Math Dept" tab contains a department chair's request for appointments
+  (last names only); resolve via =(last, "Math")= in the name dictionary.
+
+** pandas nullable boolean gotcha
+- =Feature("AnyCommittee")= returns a =boolean= (nullable) dtype Series.
+- =pd.NA= values cause =TypeError: boolean value of NA is ambiguous= on
+  comparisons like =val == "True"= or =if val:=.
+- Always =series.fillna(False).astype(bool)= before filtering.
+
+** =faculty.volunteers()= returns Email-indexed (not Email-columned) frames
+- Both code paths in =faculty.volunteers()= --- single-year and
+  =year='all'= --- end with Email as the *index* of the returned frame,
+  not as a column.  The =set_index("Email")= call drops the column by
+  default, and the single-year path inherits Email from the
+  =Features[year]= MultiIndex without re-promoting it.
+- Any downstream code that needs Email available for joins, =isin=, or
+  groupby should =reset_index()= the frame first --- or read from
+  =df.index= directly.
+- This is exactly the trap that bit =Committee.volunteers()=: it ran
+  =pd.concat(frames, ignore_index=True)= followed by a defensive
+  =if "Email" in df.columns: df.set_index("Email", drop=False)=, but
+  the recovery clause never fired because Email was never a column,
+  and =ignore_index=True= had already discarded the per-frame Email
+  indices.  Fix is in the package now (=committee.py= rev =6e15556=:
+  promote Email to a column on each frame *before* the concat).
+- General rule: when stacking results of =faculty.volunteers()= or any
+  Email-indexed feature loader, never use =ignore_index=True= without
+  first calling =reset_index()= on each frame.
+
+* Change Log Template
+Agents editing this guide should append entries like:
+
+#+begin_example
+** <YYYY-MM-DD Day> Assistant (Codex CLI)
+- Summary of updates (sections touched, policies clarified)
+- New commands or workflows added to the checklist
+#+end_example
+
+* Current Change Log
+** <2025-11-02 Sun> Assistant (Codex CLI)
+- Initial adaptation of ManifoldGMM agent guidelines to UCBFaculty’s Org
+  workflow, data-safety expectations, and Poetry-based tooling.
+- Marked =ucbfaculty/*.py= as the canonical source code and clarified that
+  Org documents are design references only.
+** <2025-11-03 Mon> Assistant (Codex CLI)
+- Added Panel-specific validation guidance (dataset prerequisites, BytesIO
+  downloads, layout expectations) so UI iterations stay consistent.
+- Flagged the dependency on the external =RawData/= repo before serving
+  apps and reminded future agents to verify filters after layout edits.
+** <2025-12-28 Sun> Assistant (Codex CLI)
+- Reinforced FeatureBuilder-only access: do not read RawData CSV/XLS files
+  directly; normalize via =features.yaml= transforms/spelling dictionaries.
+- Keep role/name casing fixes in transforms, not in downstream views.
+- Clear caches (e.g., =clear_faculty_caches=) when feature specs change.
+- Respect config paths from =~/.ucbfaculty/config.yaml= and
+  =ucbfaculty.__init__= helpers.
+- Emphasized Email as the canonical index; avoid UID for joins or indices
+  because coverage varies across sources.
+** <2026-02-02 Mon> Assistant (Codex CLI)
+- Added specific context for user =coder= in the Pre-Execution Checklist,
+  noting the location of configuration (=~/.ucbfaculty=) and GPG keys.
+** <2026-04-15 Tue> Assistant (Claude Code)
+- Added "Tacit Knowledge" section covering: FACULTY_NAME_DICTIONARY vs
+  spelling_dictionary disambiguation, MCP large-result workaround, Appointment
+  vs Sheet roster discrepancy (~5% gap), COMS Google Sheet dual-section parsing,
+  column-offset detection heuristic, and pandas nullable boolean gotcha.
+- Also proposed 3 generalizable learnings to cq commons (gspread .xlsx IDs,
+  pandas nullable bool, semantic column-shift detection).
+- Originally landed in =FacultyExplorer/AGENTS.org=; migrated to UCBFaculty
+  on 2026-04-26 since the content is entirely about the package internals.
+** <2026-04-26 Sun> Sue (Claude Sonnet 4.5)
+- Imported the Tacit Knowledge section from =FacultyExplorer/AGENTS.org=
+  (where it had been added on 2026-04-15) so package-internal lore lives
+  with the package.
+- MCP server reform (5 commits):
+  1. New module =ucbfaculty.queries= --- DuckDB-backed query layer
+     wrapping the existing loaders as zero-copy views.  Lazy
+     registration; static views (=vitals=, =committees=) eager on
+     first =con()= call; feature views registered on first SQL
+     reference.  Process-local, not thread-safe, in-memory only
+     (no plaintext on disk).
+  2. New MCP tools =query= and =describe=; default format flipped
+     from =org= to =json= (every consumer is an LLM, for which JSON
+     is denser per token).
+  3. =query= gained =output_path= for spill-to-file: Parquet default,
+     CSV via =.csv= extension, DuckDB-readable so the spill can be
+     re-queried directly.
+  4. Dropped 7 redundant tools now subsumed by =query=: =is_unlocked=,
+     =available_features=, =faculty_vitals=, =committee_membership=,
+     =get_feature=, =get_features=, =build_feature_dataframe=.  Also
+     dropped no-arg "dump everything" modes on =dept_*_to_*=.  Tool
+     surface 20 -> 13.
+  5. Replaced the "avoid large-result queries" Tacit Knowledge entry
+     with guidance for =query= + =describe= + =output_path=.
+- Verified safety of each removal via gitnexus =impact()= upstream
+  (zero non-test Python callers).  Filed two gitnexus bugs along the
+  way (#1091: Python methods classified as kind=Function;
+  #1092: tool_map flow attribution is repo-wide rather than per-tool).
+** <2026-04-26 Sun> Sue (Claude Sonnet 4.5)
+- COMS Google Sheet section: replaced the hard-coded AY25-26 key with
+  guidance to keep the (rotating) sheet key in =~/.ucbfaculty/config.yaml=
+  under =coms_sheet_key:=.  The xlsx the sheet copies from changes behind
+  our back, so every fresh snapshot mints a new key; treat the key as
+  configuration, not source.  =FacultyExplorer/scripts/any_committee_audit.py=
+  was updated in tandem (CLI =--sheet-key= / =--sheet-url= and
+  =$COMS_SHEET_KEY= overrides; falls back to the config field).
+** <2026-05-03 Sun> Sue (Claude Opus 4.7)
+- Fixed Email-loss bug in =Committee.volunteers()= (=committee.py= rev
+  =6e15556=): per-frame Email indices were being discarded by
+  =pd.concat(..., ignore_index=True)= and the column-based recovery
+  clause never fired because =faculty.volunteers()= returns
+  Email-indexed (not Email-columned) frames.  Added regression tests
+  in =tests/test_committee_volunteers.py=.
+- Added a new Tacit Knowledge entry documenting that
+  =faculty.volunteers()= returns Email as index, not column, and the
+  =ignore_index=True= trap that follows.
+- Proposed two generalisable learnings to cq commons (the
+  =pd.concat= index-loss foot-gun and gitnexus =detect_changes=
+  false-positive on adjacent additions) plus one operational note on
+  benign LadyBug lock warnings during concurrent reindex.

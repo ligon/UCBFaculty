@@ -1,0 +1,116 @@
+Email:
+  _description: "@berkeley.edu email address"
+  _type: str
+  _index:
+    - FullName
+
+FullName:
+  _description: "Canonical full name"
+  _type: str
+  _index:
+    - Email
+
+LastName:
+  _description: "Last name"
+  _type: str
+  _index:
+    - Email
+
+FirstName:
+  _description: "First name"
+  _type: str
+  _index:
+    - Email
+
+UID:
+  _description: "University ID"
+  _type: int
+  _index:
+    - Email
+
+DeptCode:
+  _description: "Department code"
+  _type: category
+  _index:
+    - Email
+
+DeptName:
+  _description: "Department name"
+  _type: str
+  _index:
+    - Email
+
+Division:
+  _description: "Academic Division"
+  _type: category
+  _index:
+    - Email
+
+Affiliations:
+  _description: "Academic Senate affiliations"
+  _type: str
+  _index:
+    - Email
+
+EmploymentCategory:
+  _description: "Employment category"
+  _type: ("Active Faculty", "Emeritus (Retired)", "Emeritus (Recalled)", "Deans/Admin")
+  _index:
+    - Email
+
+Step:
+  _description: "Salary step"
+  _type: int
+  _index:
+    - Email
+
+Appointment:
+  _description: "Committee appointed to"
+  _type: category
+  _index:
+    - Year
+    - Email
+
+Role:
+  _description: "Role on committee"
+  _type: category
+  _index:
+    - Year
+    - Email
+    - Appointment
+
+AnyCommittee:
+  _description: "Willing to serve on any committee"
+  _type: bool
+  _index:
+    - Email
+
+Choice1:
+  _description: "First choice committee"
+  _type: str
+  _index:
+    - Email
+
+Choice2:
+  _description: "Second choice committee"
+  _type: str
+  _index:
+    - Email
+
+Choice3:
+  _description: "Third choice committee"
+  _type: str
+  _index:
+    - Email
+
+Continue:
+  _description: "Willing to continue current service"
+  _type: bool
+  _index:
+    - Email
+
+RecWellMember:
+  _description: "Member of RecWell facility"
+  _type: bool
+  _index:
+    - Email

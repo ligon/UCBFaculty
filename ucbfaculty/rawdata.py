@@ -254,15 +254,28 @@ def get_dataframe(fn, correct_column_spellings=True, **kwargs):
     return renamed.copy()
 
 
-def load_coms_tracking(year="2025-26", workbook="COMS Tracking Sheet AY25-26.xlsx.gpg", drop_unmatched=False):
-    """Parse the COMS tracking workbook into a normalized dataframe.
+def load_coms_tracking(workbook, year="2025-26", drop_unmatched=False):
+    """Parse a COMS tracking-sheet export into a normalized dataframe.
+
+    Seasonal *ingest* utility, not a runtime data path.  The tracking
+    sheet is the Senate office's working document (as of AY25-26 a
+    Google Sheet owned by the COMS analyst; bDrive is approved for P3
+    under the campus Box/Google data-use agreement).  At season end,
+    export the workbook, parse it with this function, and persist only
+    the cleaned extracts declared in ``sources.yaml``.  The raw export
+    itself must not be committed to RawData -- the pre-commit hook
+    enforces that holdings match declared sources -- and staff
+    working-note columns (e.g. ``CantServe``) are parsed for in-season
+    convenience but must never be persisted.
 
     Parameters
     ----------
+    workbook : str | Path
+        Path to the exported tracking workbook (xlsx, optionally
+        GPG-encrypted).  Relative paths resolve against the data
+        directory.
     year : str
         Academic year represented in the workbook (used in output).
-    workbook : str
-        Relative path inside RawData for the tracking workbook.
     drop_unmatched : bool
         If True, drop rows that could not be matched to a faculty email.
 

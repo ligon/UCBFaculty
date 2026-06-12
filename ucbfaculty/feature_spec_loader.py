@@ -115,6 +115,12 @@ class SourceSpec:
     sheets_are_years : bool
         When ``True``, each sheet in the workbook represents a
         different academic year.
+    accessioned : str | None
+        ISO date (``YYYY-MM-DD``) the file entered this archive, from
+        the ``_accessioned`` field.  Recorded explicitly in the spec
+        so provenance survives any storage representation (git, Box,
+        plain folder); the source system's own report date, if any,
+        is usually part of the filename.
     """
 
     name: str
@@ -124,6 +130,7 @@ class SourceSpec:
     index: Any
     sheet: Optional[str]
     sheets_are_years: bool
+    accessioned: Optional[str] = None
 
     @classmethod
     def from_dict(cls, name: str, data: dict) -> "SourceSpec":
@@ -135,6 +142,10 @@ class SourceSpec:
         year_range = data.get("_year_range")
         if not years and not year_range:
             years = [_default_year()]
+        accessioned = data.get("_accessioned")
+        if accessioned is not None:
+            # YAML parses bare YYYY-MM-DD into datetime.date; normalise.
+            accessioned = str(accessioned)
         return cls(
             name=name,
             authority_for=data.get("_authority_for", []) or [],
@@ -143,6 +154,7 @@ class SourceSpec:
             index=data.get("_index"),
             sheet=data.get("_sheet"),
             sheets_are_years=bool(data.get("_sheets_are_years")),
+            accessioned=accessioned,
         )
 
 

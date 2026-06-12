@@ -150,8 +150,81 @@ def _try_gpg_agent_decrypt(path: Path) -> Optional[bytes]:
         return None
 
 
+def validate_holdings(data_dir=None, sources=None) -> dict:
+    """Compare encrypted files at rest against declared sources.
+
+    The holdings invariant: every encrypted data file in the data
+    directory must be declared as a stanza in ``sources.yaml`` (data
+    at rest is exactly the declared sources).  This check is
+    storage-representation-independent -- it works the same whether
+    the data directory is a git checkout, a Box Drive mount, or a
+    plain folder.  (Where the archive is a git repo, the RawData
+    pre-commit hook enforces the same invariant at commit time.)
+
+    Parameters
+    ----------
+    data_dir : str | Path | None
+        Data directory to inspect.  Defaults to the configured
+        ``datadir``.
+    sources : Path | str | tuple | None
+        ``sources.yaml`` path(s).  Defaults to the configured spec.
+
+    Returns
+    -------
+    dict
+        ``declared``: declared source filenames;
+        ``at_rest``: encrypted filenames present in *data_dir*;
+        ``undeclared``: encrypted files at rest with no stanza
+        (invariant violations);
+        ``missing``: declared sources with no file at rest.
+    """
+    from ucbfaculty.feature_spec_loader import load_source_specs_multi
+
+    base = Path(data_dir) if data_dir is not None else Path(datadir)
+    specs = load_source_specs_multi(sources)
+    declared = sorted(specs.keys())
+    at_rest = sorted(
+        p.name for pattern in ("*.gpg", "*.pgp") for p in base.glob(pattern)
+    )
+    undeclared = sorted(set(at_rest) - set(declared))
+    missing = sorted(n for n in declared if not (base / n).exists())
+    return {
+        "declared": declared,
+        "at_rest": at_rest,
+        "undeclared": undeclared,
+        "missing": missing,
+    }
+
+
+_HOLDINGS_WARNED = False
+
+
+def _warn_undeclared_holdings_once() -> None:
+    """Warn (once per process) if undeclared encrypted files are at rest.
+
+    Never raises: a failed check must not break data loading.
+    """
+    global _HOLDINGS_WARNED
+    if _HOLDINGS_WARNED:
+        return
+    _HOLDINGS_WARNED = True
+    try:
+        report = validate_holdings()
+        if report["undeclared"]:
+            warnings.warn(
+                "Encrypted files at rest are not declared in sources.yaml: "
+                + ", ".join(report["undeclared"])
+                + ".  Holdings should be exactly the declared sources; "
+                "run `ucbfaculty doctor` for details.",
+                stacklevel=3,
+            )
+    except Exception as exc:
+        logger.debug("Holdings check skipped: %s", exc)
+
+
 def _load_encrypted_dataframe(path: Path, **kwargs):
     """Decrypt a GPG-encrypted file and load it into a DataFrame."""
+    _warn_undeclared_holdings_once()
     if len(path.suffixes) < 2:
         raise ValueError(f"Encrypted file {path} must include original suffix before .gpg/.pgp")
 

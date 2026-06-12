@@ -255,6 +255,49 @@ def print_config_info() -> None:
         print("\nExample lookup: (faculty spellings file not available)")
 
 
+def _doctor() -> None:
+    """Check data holdings against declared sources and report.
+
+    Verifies the holdings invariant (every encrypted file at rest is
+    declared in ``sources.yaml``) and that every declared source is
+    present.  Exits 0 when the invariant holds, 1 on violations,
+    2 when the data directory is missing.
+    """
+    from ucbfaculty import datadir
+    from ucbfaculty.feature_spec_loader import load_source_specs_multi
+    from ucbfaculty.rawdata import validate_holdings
+
+    print(f"Data directory: {datadir}")
+    if not Path(datadir).exists():
+        print("  ERROR: data directory does not exist.")
+        raise SystemExit(2)
+
+    report = validate_holdings()
+    specs = load_source_specs_multi()
+    print(f"Declared sources: {len(report['declared'])}")
+    for name in report["declared"]:
+        spec = specs.get(name)
+        acc = (
+            f"accessioned {spec.accessioned}"
+            if spec is not None and spec.accessioned
+            else "accession date unrecorded"
+        )
+        status = "MISSING" if name in report["missing"] else "ok"
+        print(f"  [{status:>7}] {name} ({acc})")
+    if report["undeclared"]:
+        print("Encrypted files at rest with no sources.yaml stanza:")
+        for name in report["undeclared"]:
+            print(f"  [VIOLATION] {name}")
+        print("Declare each file in sources.yaml, or remove it from the archive.")
+
+    ok = not report["undeclared"] and not report["missing"]
+    print(
+        "Holdings invariant: "
+        + ("OK -- data at rest matches declared sources." if ok else "FAILED")
+    )
+    raise SystemExit(0 if ok else 1)
+
+
 def _prompt_passphrase() -> None:
     """Ensure the security module has the desired passphrase configured."""
     prompt = "Enter GPG passphrase (leave blank to skip): "
@@ -290,7 +333,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="serve",
-        choices=("serve", "panel", "info", "unlock", "init", "install-launcher"),
+        choices=("serve", "panel", "info", "unlock", "init", "install-launcher", "doctor"),
         help="Command to execute (default: serve).",
     )
     parser.add_argument(
@@ -392,6 +435,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             dest=Path(args.dest).expanduser() if args.dest else None,
             force=args.force,
         )
+        return
+    if args.command == "doctor":
+        _doctor()
         return
     # Check for config existence
     from ucbfaculty import config_file

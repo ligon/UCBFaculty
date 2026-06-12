@@ -264,81 +264,12 @@ def employment_category(value):
     return _map_single(value)
 
 
-# --- predict_sex --------------------------------------------------------
-#
-# INTERNAL/ANALYTIC ONLY -- intended for DIVCO reporting in the
-# FacultyExplorer workflow.  DO NOT use the predicted ``Sex`` feature
-# for committee selection (Title VII / Prop 209).
-#
-# This transformation is deliberately a *soft* dependency on the
-# ``gender-guesser`` package (Joerg Michael's name dataset).  The
-# import is lazy and failure-tolerant: if ``gender_guesser`` is not
-# installed in the active venv, ``predict_sex`` returns ``pd.NA``
-# rather than raising, so the surrounding feature-loader keeps
-# working and any analysis simply sees a higher unknown rate.
-#
-# To enable predictions, add ``gender-guesser`` to the *consuming*
-# repo's pyproject (e.g. FacultyExplorer), not to UCBFaculty's deps.
-
-_SEX_DETECTOR = None
-
-
-def _get_sex_detector():
-    """Lazily build a singleton ``gender_guesser`` detector.
-
-    Returns ``None`` if the package is unavailable, so callers can
-    degrade gracefully to ``pd.NA``.
-    """
-    global _SEX_DETECTOR
-    if _SEX_DETECTOR is None:
-        try:
-            import gender_guesser.detector as _gg
-            _SEX_DETECTOR = _gg.Detector(case_sensitive=False)
-        except ImportError:
-            _SEX_DETECTOR = False  # sentinel for "tried and failed"
-    return _SEX_DETECTOR or None
-
-
-@mask_missing()
-def predict_sex(first_name):
-    """Predict sex from a first name via gender-guesser.
-
-    Parameters
-    ----------
-    first_name : str
-        Faculty first name.  May contain compound forms
-        (``"Mary Ann"``, ``"Jean-Pierre"``); only the leading token
-        is used because the underlying dataset is keyed on single
-        first names.
-
-    Returns
-    -------
-    str | pandas.NA
-        ``"F"``, ``"M"``, or ``"unknown"``.  ``mostly_female`` /
-        ``mostly_male`` collapse to ``"F"`` / ``"M"``; ``andy``
-        (androgynous) and ``unknown`` collapse to ``"unknown"``.
-        Returns ``pd.NA`` when the input is empty or
-        ``gender_guesser`` is not installed.
-
-    Notes
-    -----
-    Accuracy is high for Anglo first names and degrades on East
-    Asian, many South Asian, and many African names.  Downstream
-    analyses should report unknown rates by Division to expose the
-    asymmetry rather than treat ``"unknown"`` as missing-at-random.
-    """
-    if not isinstance(first_name, str) or not first_name.strip():
-        return pd.NA
-    detector = _get_sex_detector()
-    if detector is None:
-        return pd.NA
-    token = first_name.strip().split()[0]
-    raw = detector.get_gender(token)
-    if raw in ("male", "mostly_male"):
-        return "M"
-    if raw in ("female", "mostly_female"):
-        return "F"
-    return "unknown"
+# NOTE: predict_sex and the POC feature were removed 2026-06-12.
+# Demographic attributes (predicted sex, person-of-color status) are
+# not criteria COMS can lawfully use in committee selection (Title
+# VII / Prop 209), and are no longer ingested or derived anywhere in
+# this package.  See RawData's sources.yaml history for the prior
+# declarations.
 
 
 @mask_missing()

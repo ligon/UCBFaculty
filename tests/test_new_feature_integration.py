@@ -176,3 +176,39 @@ def test_available_years_non_empty(name):
     feat = nf.Feature(name)
     years = feat.available_years()
     assert len(years) > 0, f"{name} should have at least one available year"
+
+
+# ── regression: a _year_range source must be filtered per single year ──
+
+def _appt_pairs(year):
+    """(email, committee) set for Appointment in *year*; skip on data err."""
+    try:
+        series = nf.Feature("Appointment")[year]
+    except (FileNotFoundError, OSError) as exc:
+        pytest.skip(f"Data unavailable: {exc}")
+    except Exception as exc:
+        if "decrypt" in str(exc).lower() or "secret key" in str(exc).lower():
+            pytest.skip(f"Cannot decrypt data: {exc}")
+        raise
+    pairs = set()
+    for idx, com in series.items():
+        email = idx[1] if isinstance(idx, tuple) else idx
+        if isinstance(email, str) and isinstance(com, str):
+            pairs.add((email.lower(), com.upper()))
+    return pairs
+
+
+def test_year_range_source_filtered_per_year():
+    """A single-year query against a ``_year_range`` source (Appointment,
+    from past_committee_appointments) must return only that year -- not the
+    full history -- and consecutive years must differ.  Guards the
+    regression where every past year resolved to the same multi-decade blob.
+    """
+    y2024 = _appt_pairs("2024-25")
+    y2023 = _appt_pairs("2023-24")
+    assert y2024 and y2023, "expected non-empty Appointment data for both years"
+    assert y2024 != y2023, "consecutive Appointment years identical (year filter regressed)"
+    assert len(y2024) < 1000, (
+        f"Appointment['2024-25'] returned {len(y2024)} rows -- looks like the "
+        "entire history rather than a single year"
+    )

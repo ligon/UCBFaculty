@@ -256,6 +256,9 @@ class Feature:
             return pd.Series(dtype=object)
 
         out = pd.concat(frames)
+        # Year-range sources embed all years in one file; keep only the
+        # year actually requested (no-op for single-year sources).
+        out = _select_year(out, actual_year)
         return _reindex_to_spec(out, self.spec)
 
     def available_years(self) -> list[str]:
@@ -720,6 +723,27 @@ def _ensure_year_level(series: pd.Series, year: Any, spec_index: list[str], forc
         [[normalized_year] * len(series), series.index],
         names=names,
     )
+    return series
+
+
+def _select_year(series: pd.Series, year: Any) -> pd.Series:
+    """Restrict a materialized series to a single academic year.
+
+    Year-range sources (``_year_range``) embed every year in one file, so
+    a single-year resolve must keep only the requested year -- otherwise a
+    query like ``Feature("Appointment")["2024-25"]`` returns the entire
+    history (and every past year resolves to the same blob).  This is a
+    no-op for series without a ``Year`` index level, and for single-year
+    sources whose rows were just labelled with the requested year.
+    """
+    if year in (None, "history"):
+        return series
+    ny = normalize_academic_year(year)
+    idx = series.index
+    if isinstance(idx, pd.MultiIndex) and idx.names and "Year" in idx.names:
+        return series[idx.get_level_values("Year") == ny]
+    if getattr(idx, "name", None) == "Year":
+        return series[idx == ny]
     return series
 
 

@@ -109,3 +109,13 @@ already encoded in `reindex_to_email` + the two module dictionaries.
   (`find_similar_pairs`, `most_similar`); `thefuzz`/fallbacks kick in when it's absent.
 - MCP surface was trimmed 20→13 tools (Apr 2026); `query`+`describe` subsume the old per-frame
   getters. Two gitnexus bugs filed in passing (#1091 method kind, #1092 tool flow attribution).
+- **`security.py` reaches GPG by bare name — suspected launcher bug, NOT reproduced.**
+  `_preset_gpg_agent` (security.py:96, :116) and the decrypt helpers (:163, :210) invoke
+  `gpg` / `gpg-preset-passphrase` via `PATH`; the `FileNotFoundError` branch at :127 is the
+  symptom surface. GUI-launched processes — the macOS `.app` (`d33ba01`) and Windows `.bat`
+  (`4c8ae3d`) launchers — inherit a minimal `PATH` where Homebrew / Gpg4win installs are
+  invisible, so the very users those launchers were built for are the ones who'd hit it.
+  Fix shape: `shutil.which()` plus a real "gpg not found" diagnostic instead of a swallowed
+  exception. **Caveat:** this is reconstructed from an abandoned `import shutil` left in the
+  working tree 2026-05-27 (discarded 2026-07-22), not from a reproduction — confirm on an
+  actual double-clicked launcher install before writing the fix.

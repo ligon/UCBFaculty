@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "UCBFaculty: Faculty Data Tools for Berkeley's Academic Senate"
+abstract: >-
+  Python tools for assembling and reconciling data about faculty and
+  other academic personnel across disparate University of California
+  sources.  Developed for use by the Berkeley Division of the Academic
+  Senate, and used both for committee-appointment work and for
+  bibliometric analysis.
+authors:
+  - family-names: Ligon
+    given-names: Ethan
+    affiliation: "University of California, Berkeley"
+    email: "ligon@berkeley.edu"
+    orcid: "https://orcid.org/0000-0003-4928-0616"
+repository-code: "https://github.com/ligon/UCBFaculty"
+url: "https://github.com/ligon/UCBFaculty"
+license: AGPL-3.0-or-later
+license-url: "https://github.com/ligon/UCBFaculty/blob/main/LICENSE.org"
+version: 0.3.0
+date-released: "2026-05-27"
+keywords:
+  - academic personnel
+  - faculty data
+  - shared governance

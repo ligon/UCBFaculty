@@ -1,0 +1,22 @@
+{
+  "upload_type": "software",
+  "title": "UCBFaculty: faculty data tools for Berkeley's Academic Senate",
+  "creators": [
+    {
+      "name": "Ligon, Ethan",
+      "affiliation": "University of California, Berkeley",
+      "orcid": "0000-0003-4928-0616"
+    }
+  ],
+  "description": "<p>Python tools for assembling and reconciling data about faculty and other academic personnel across disparate University of California sources. Developed for use by the Berkeley Division of the Academic Senate, and used both for committee-appointment work and for bibliometric analysis. Ships a Panel-based lookup application with a CLI entry point.</p>",
+  "license": "agpl-3.0-or-later",
+  "access_right": "open",
+  "keywords": [
+    "higher education",
+    "academic personnel",
+    "bibliometrics",
+    "data reconciliation",
+    "University of California",
+    "Python"
+  ]
+}

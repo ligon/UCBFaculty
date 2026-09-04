@@ -16,16 +16,15 @@ Hello,
 The campus has asked us to move the confidential faculty data off
 GitHub and into Berkeley's Box, which is approved for this kind of
 data.  Your copy of UCB Faculty Tools needs a small one-time change
-so it reads from Box instead.  It takes about 15 minutes.  Please do
+so it reads from Box instead.  It should take about 15 minutes.  Please do
 the steps in order; each one tells you what you should see.
 
 If anything looks different from what is described, stop and email
 me with a screenshot.  Nothing here can damage anything.
 
-
 STEP 1.  Accept the Box folder
 
-  You will receive an email from Box saying that a folder called
+  You should receive an email from Box saying that a folder called
   "COMS Faculty Data" has been shared with you.  Click the link in
   that email, or open this address in your browser:
 
@@ -38,7 +37,6 @@ STEP 1.  Accept the Box folder
   Open the folder once in the browser.  This matters: Box Drive
   (next step) only shows shared folders you have opened at least
   once.
-
 
 STEP 2.  Install Box Drive
 

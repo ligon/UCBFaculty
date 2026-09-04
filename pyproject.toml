@@ -2,10 +2,12 @@
 name = "ucbfaculty"
 # Version is derived from `git describe` at build time by
 # poetry-dynamic-versioning (see [tool.poetry-dynamic-versioning]
-# and [build-system] below).  The literal value here is a placeholder
-# that ships in sdists/wheels only when the build is not made from
-# a git checkout (e.g. installing a downloaded sdist without git).
-version = "0.0.0"
+# and [build-system] below).  With a PEP 621 [project] table the
+# version MUST be declared dynamic here and the placeholder kept
+# under [tool.poetry]; a literal `version = "0.0.0"` in [project]
+# is authoritative and the plugin silently leaves it alone (that is
+# how a 0.0.0 wheel reached PyPI in July 2026).
+dynamic = ["version"]
 description = "Faculty data for use by Berkeley's Academic Senate"
 authors = [
     {name = "Ethan Ligon", email = "ligon@berkeley.edu"}
@@ -34,6 +36,12 @@ ucbfaculty-mcp = "ucbfaculty.mcp_server:main"
 
 [tool.setuptools.package-data]
 ucbfaculty = ["spelling_dictionary.json"]
+
+[tool.poetry]
+# Placeholder only; replaced at build time (see the note on
+# `dynamic` above).  Ships as-is only when built outside a git
+# checkout.
+version = "0.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2"

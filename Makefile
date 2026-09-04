@@ -60,6 +60,11 @@ publish: build
 #   3. `build` was a prerequisite, so it ran BEFORE the tag existed and
 #      dynamic versioning stamped dist/ from the PREVIOUS tag. It now
 #      runs after the tag, so artifacts carry the released version.
+#   4. pyproject.toml declared a literal version in the PEP 621
+#      [project] table, which the dynamic-versioning plugin does not
+#      override; every build was 0.0.0 regardless of tag (2026-09-03).
+#      Fixed by `dynamic = ["version"]` in [project].  Check dist/
+#      carries the tag's version before publishing.
 #
 # Guards added: refuse an existing tag, refuse a dirty tree. Tag is
 # annotated (-a) -- these tags feed Zenodo DOI records via the GitHub

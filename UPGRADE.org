@@ -1,0 +1,178 @@
+#+TITLE: Moving UCB Faculty Tools to Box: step-by-step
+#+AUTHOR: Ethan Ligon
+#+DATE: 2026-09-03
+
+This page is written to be pasted into an email.  It assumes you
+already have UCB Faculty Tools working on your computer and have
+never used the Terminal for anything else.  Nothing here changes
+your GPG key or your passphrase.
+
+-----
+
+Subject: UCB Faculty Tools: one-time change to where the data comes from
+
+Hello,
+
+The campus has asked us to move the confidential faculty data off
+GitHub and into Berkeley's Box, which is approved for this kind of
+data.  Your copy of UCB Faculty Tools needs a small one-time change
+so it reads from Box instead.  It takes about 15 minutes.  Please do
+the steps in order; each one tells you what you should see.
+
+If anything looks different from what is described, stop and email
+me with a screenshot.  Nothing here can damage anything.
+
+
+STEP 1.  Accept the Box folder
+
+  You will receive an email from Box saying that a folder called
+  "COMS Faculty Data" has been shared with you.  Click the link in
+  that email, or open this address in your browser:
+
+      https://berkeley.app.box.com/folder/410604666843
+
+  Sign in with your CalNet ID if asked.  You should see a folder
+  containing files whose names end in ".gpg".  If Box says you do
+  not have access, email me; you have not been added yet.
+
+  Open the folder once in the browser.  This matters: Box Drive
+  (next step) only shows shared folders you have opened at least
+  once.
+
+
+STEP 2.  Install Box Drive
+
+  Box Drive is Box's official program that makes your Box folders
+  appear on your computer like ordinary folders and keeps them up
+  to date by itself.  If your machine is managed by campus IT it may
+  already be installed; look for a blue "Box" icon in the menu bar
+  (Mac) or the system tray (Windows).  If you have it, skip to
+  Step 3.
+
+  Otherwise go to
+
+      https://www.box.com/resources/downloads
+
+  and download "Box Drive" for your computer (Mac or Windows).  Run
+  the installer, accepting the defaults.  When Box Drive asks you to
+  sign in, enter your @berkeley.edu email address; you will be sent
+  to the CalNet page to sign in as usual.
+
+
+STEP 3.  Check that the folder is on your computer
+
+  On a Mac:  Open Finder.  In the sidebar on the left you should see
+  "Box".  Click it.  You should see a folder named "COMS Faculty
+  Data".  Open it; you should see the same ".gpg" files you saw in
+  the browser.
+
+  On Windows:  Open File Explorer.  In the panel on the left you
+  should see "Box".  Click it.  You should see a folder named "COMS
+  Faculty Data".  Open it; you should see the same ".gpg" files you
+  saw in the browser.
+
+  If the folder is not there yet, wait a minute or two and look
+  again.  If it still is not there, go back to Step 1 and make sure
+  you opened the folder in the browser.
+
+  Optional but recommended: right-click the "COMS Faculty Data"
+  folder and choose "Make Available Offline".  Otherwise the first
+  time the app opens each file it has to download it, which makes
+  the first launch slow.
+
+
+STEP 4.  Open a Terminal window
+
+  This is a plain text window where you type commands.  You will
+  type exactly two commands.
+
+  On a Mac:  Press Command and the space bar together, type
+  Terminal, and press Return.  A window opens showing a line ending
+  in "%" or "$".
+
+  On Windows:  Press the Windows key, type PowerShell, and press
+  Enter.  A blue or black window opens showing a line ending in ">".
+
+
+STEP 5.  Update the app
+
+  Type the following line into the window exactly as written, then
+  press Return (Enter):
+
+      pipx upgrade ucbfaculty
+
+  Some text will scroll by for up to a minute.  It should end with a
+  line saying either "upgraded package ucbfaculty" and a version
+  number, or "ucbfaculty is already at latest version".  Either is
+  fine.
+
+  If instead it says "command not found" or "pipx is not
+  recognized", type this line and press Return:
+
+      python3 -m pipx ensurepath
+
+  then close the Terminal window, open a new one (Step 4), and try
+  "pipx upgrade ucbfaculty" again.
+
+
+STEP 6.  Point the app at Box
+
+  Type this line and press Return:
+
+      ucbfaculty init --force
+
+  You should see a few lines like:
+
+      Wrote /Users/yourname/.ucbfaculty/config.yaml
+        data_directory: /Users/yourname/Library/CloudStorage/Box-Box/COMS Faculty Data
+        data_backend:   box-drive
+
+  (On Windows the paths will start with C:\Users\yourname\Box\.)
+  The important part is the "data_backend: box-drive" line.  On a
+  Mac you may also see "Wrote: ... UCB Faculty Tools.app"; that just
+  refreshes the app icon you already have.
+
+  If instead it says "Could not locate the data directory", Box
+  Drive has not finished putting the folder on your computer.  Go
+  back to Step 3, wait until you can see the files, and repeat this
+  step.
+
+
+STEP 7.  Launch the app as usual
+
+  Start UCB Faculty Tools the way you always have: double-click the
+  "UCB Faculty Tools" app (Mac) or the shortcut on your Desktop
+  (Windows), or in the Terminal type
+
+      ucbfaculty --show
+
+  Enter your passphrase on the first screen as before.  The first
+  launch may take a little longer while Box Drive downloads the
+  files.  If you can look up a faculty member, you are done.
+
+
+STEP 8.  Throw away the old copy of the data
+
+  The old data lived in a folder named "RawData" in your home
+  folder.  It is now out of date and should not be kept.
+
+  On a Mac:  In Finder, choose Go > Home from the menu bar.  Drag
+  the folder "RawData" to the Trash, then choose Finder > Empty
+  Trash.
+
+  On Windows:  In File Explorer, open "This PC", then your user
+  folder (usually C:\Users\yourname).  Right-click "RawData", choose
+  Delete, then right-click the Recycle Bin on the Desktop and choose
+  Empty Recycle Bin.
+
+
+That is everything.  From now on new data arrives on its own through
+Box Drive; there is nothing to click or update.
+
+If you were given a ready-made app file by me instead of installing
+with pipx, Steps 5 and 6 do not apply: send me a note and I will
+send you a new file, then do Steps 1 to 3, 7 and 8.
+
+Thank you, and please do write if you get stuck at any step.
+
+Ethan

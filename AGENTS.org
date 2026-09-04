@@ -318,3 +318,20 @@ Agents editing this guide should append entries like:
   =pd.concat= index-loss foot-gun and gitnexus =detect_changes=
   false-positive on adjacent additions) plus one operational note on
   benign LadyBug lock warnings during concurrent reindex.
+** <2026-09-03 Thu> Assistant (Claude Fable 5.1)
+- Data distribution moved from a private GitHub repo to a shared Box
+  folder (PL3 policy).  New =ucbfaculty/datasync.py= abstracts the
+  transport: =box-drive= / =rclone= / =git= backends, selected by
+  =data_backend= in =~/.ucbfaculty/config.yaml= or inferred.  Use
+  =datasync.sync_data_directory()= rather than shelling out to git.
+- New CLI command =ucbfaculty sync=; =ucbfaculty init= also searches
+  Box Drive mounts.  Setup wizard and Settings tab route through the
+  same module.  =gitpython= dropped from dependencies.
+- Maintainer publishing: =RawData/scripts/publish-to-box.sh= (dry run
+  by default, =--go= to publish).  Filters there mirror
+  =datasync.RCLONE_FILTERS=; keep them in step.  =Proposed*/= and any
+  plaintext =.csv=/=.xlsx= are excluded by both.
+- Box moves deletions to Trash; =rclone cleanup ucbfaculty:= empties
+  it for the signed-in account.  Verified via the Box API that the
+  trash was empty after removing an accidental upload.
+

@@ -1,16 +1,16 @@
 #+TITLE: UCBFaculty Installation Guide
 #+AUTHOR: Ethan Ligon
-#+DATE: 2026-02-08
+#+DATE: 2026-09-03
 
 * About This Package
 
 The =ucbfaculty= package is intended for members of the UC Berkeley
 Academic Senate Committee on Committees and a small group of related
 users.  The package itself is open source and installable from PyPI,
-but it requires access to the private =RawData= repository --- which
-holds GPG-encrypted faculty data --- to do anything useful.  If you are
-not a current committee member, the application will install
-successfully but will have nothing to read.
+but it requires access to a private data archive --- a shared Box
+folder holding GPG-encrypted faculty data --- to do anything useful.
+If you are not a current committee member, the application will
+install successfully but will have nothing to read.
 
 If you /are/ a current or incoming committee member, the rest of this
 guide walks you through the one-time setup.
@@ -23,18 +23,36 @@ the application.  These only need to be done once.
 Please have the following ready, then email *Linda Corley*
 (=lindac@berkeley.edu=) with:
 
-1. Your *GitHub username* (see [[*Create a GitHub Account]]).
+1. Your *=@berkeley.edu= email address* (so you can be given access
+   to the Box folder).
 2. Your *GPG public key* (see [[*GPG Key Pair]]).
 
-Linda will add you as a collaborator on the private =RawData=
-repository (which holds the encrypted faculty data files) and encrypt
-the confidential data files to your key.  You will receive a
-confirmation before proceeding to installation.
+Linda will share the data folder with you in Box and encrypt the
+confidential data files to your key.  You will receive a Box
+notification and a confirmation email before proceeding to
+installation.
 
-* Create a GitHub Account
+* The Data Folder in Box
 
-If you do not already have one, sign up at https://github.com/join.
-A free account is sufficient.  Send your username to Linda.
+The encrypted data archive lives in this shared Box folder:
+
+https://berkeley.app.box.com/folder/410604666843
+
+Sign in to Box with your CalNet ID.  Once the folder has been shared
+with you it will appear under *All Files* (and under *Shared with
+me*).  Campus policy classifies the archive as protection-level 3
+data, which is why it is hosted in Box rather than on GitHub.
+
+There are two ways to get the folder onto your computer.  Pick one:
+
+- *Box Drive* (macOS and Windows; recommended).  Berkeley's standard
+  desktop client keeps the folder on your disk automatically and
+  picks up new data without you doing anything.
+- *rclone* (any platform; the only option on Linux).  A command-line
+  tool that mirrors the folder into a local directory whenever you
+  ask it to.
+
+Both are covered under [[*Get the Data]] below.
 
 * GPG Key Pair
 
@@ -136,105 +154,122 @@ it to =lindac@berkeley.edu=.
 
 * Install Prerequisites
 
-You need three tools installed regardless of platform: *Python*
-(>=3.11), *Git*, and *GPG* (covered above).
+You need *Python* (>=3.11), *GPG* (covered above), and one of *Box
+Drive* or *rclone* (covered under [[*Get the Data]]).  Git is no longer
+required.
 
 ** macOS
 
 1. *Python 3.11+:* download from https://www.python.org/downloads/ and
    run the installer.
-2. *Git:* install Xcode Command Line Tools:
-   #+begin_src sh
-   xcode-select --install
-   #+end_src
-   Or download from https://git-scm.com/download/mac.
-3. *GPG:* see [[*Install GPG]] above.
+2. *GPG:* see [[*Install GPG]] above.
 
 ** Windows
 
 1. *Python 3.11+:* download the Windows x64 installer from
    https://www.python.org/downloads/.  *Check "Add Python to PATH"*
    during installation.
-2. *Git:* install Git for Windows from
-   https://git-scm.com/download/win (defaults are fine).
-3. *GPG:* see [[*Install GPG]] above.
+2. *GPG:* see [[*Install GPG]] above.
 
 ** Linux
 
-Python 3.11+, Git, and GPG are likely already installed.  Verify with:
+Python 3.11+ and GPG are likely already installed.  Verify with:
 
 #+begin_src sh
 python3 --version   # should be 3.11 or later
-git --version
 gpg --version
 #+end_src
 
 If Python is too old, see https://www.python.org/downloads/ or use
 your distribution's backports.
 
-* Authenticate with GitHub
+* Get the Data
 
-Git needs to be able to reach the private =RawData= repository.  Any
-*one* of the following methods is sufficient --- pick whichever fits
-your machine.  *Method 1 (=gh auth login=) is recommended* if you can
-install =gh=; it is the smoothest path on every platform.
+** Option 1: Box Drive (macOS / Windows, recommended)
 
-** Method 1: GitHub CLI (=gh=, recommended)
+1. Install Box Drive from https://www.box.com/resources/downloads
+   (campus-managed machines may already have it).
+2. Sign in with your =@berkeley.edu= address; Box will send you
+   through CalNet.
+3. Open the [[https://berkeley.app.box.com/folder/410604666843][data folder]] in a browser once.  Shared folders appear
+   in Box Drive after you have opened them.
+4. Find the folder on disk:
+   - *macOS:* =~/Library/CloudStorage/Box-Box/= (older Box Drive
+     versions use =~/Box/=).
+   - *Windows:* =C:\Users\<you>\Box\=.
+   Optionally right-click the folder and choose *Make Available
+   Offline* so first-time loads are not slowed by on-demand downloads.
 
-Install =gh= once, log in once, and Git will cache your credentials
-automatically across every command.
+The setup wizard (see [[*First Run]]) looks in these locations and fills
+in the path for you.
 
-#+begin_src sh
-# macOS
-brew install gh          # or download from https://cli.github.com
+** Option 2: rclone (any platform; required on Linux)
 
-# Windows --- download installer from https://cli.github.com
+1. Install rclone: https://rclone.org/install/ (=brew install rclone=,
+   =sudo apt install rclone=, or the Windows installer).
+2. Run:
+   #+begin_src sh
+   ucbfaculty sync
+   #+end_src
+   The first time, this creates an rclone remote named =ucbfaculty=
+   pointed at the shared folder and opens a browser for Box sign-in.
+   On Box's page choose *Sign in with SSO* (or enter your
+   =@berkeley.edu= address) to go through CalNet, then click *Grant
+   access*.  rclone then mirrors the folder into =~/.ucbfaculty/data=
+   and writes the config file for you.
+3. Run =ucbfaculty sync= again whenever you want to pick up new data
+   (the app's Settings tab has a button that does the same).
 
-# Linux (Debian/Ubuntu)
-sudo apt install gh      # or see https://cli.github.com
-#+end_src
+If the browser cannot reach the link rclone prints (for example on a
+remote machine), run =rclone authorize box= on a machine with a
+browser and paste the result, as described at
+https://rclone.org/remote_setup/.
 
-Then:
+** Option 3: A git-hosted archive
 
-#+begin_src sh
-gh auth login
-#+end_src
-
-Choose *GitHub.com* as the host, *HTTPS* as the protocol, and *Login
-with a web browser* when prompted.  =gh= will display a one-time code
-and open a browser; copy the code in to finish.  After that, Git can
-reach the =RawData= repository without further prompts.
-
-** Method 2: Personal Access Token (fallback)
-
-Use this if you cannot install =gh= --- for example, on a locked-down
-institutional machine without administrator privileges.
-
-1. Sign in to GitHub and go to
-   https://github.com/settings/tokens.
-2. Click *Generate new token (classic)*, give it a name like
-   =ucbfaculty=, and grant it the =repo= scope.
-3. Copy the token somewhere safe --- you will not see it again.
-
-When Git prompts for a password during the first =git clone= or =git
-pull=, enter your *GitHub username* as the username and *paste the
-token* in place of a password.  macOS Keychain, Windows Credential
-Manager, and the Linux libsecret helper will cache it for you
-automatically; you will not be asked again.
-
-** Method 3: SSH key
-
-If you already use SSH keys for GitHub (or are comfortable generating
-them), this avoids password prompts entirely:
+Deployments that host the archive in a git repository instead of Box
+can use:
 
 #+begin_src sh
-ssh-keygen -t ed25519 -C "your.email@berkeley.edu"
-cat ~/.ssh/id_ed25519.pub                # add this output at
-                                         # https://github.com/settings/keys
+ucbfaculty sync --backend git --repo-url https://example.edu/org/RawData.git
 #+end_src
 
-When the setup wizard asks for the repository URL, replace the
-default HTTPS URL with =git@github.com:ligon/RawData.git=.
+This clones (later: pulls) the repository into =~/.ucbfaculty/data=
+and records =data_backend: git= in the config.
+
+* Upgrading from the GitHub-based setup
+
+Until September 2026 the archive was a private GitHub repository
+that the app cloned to =~/RawData=.  If you installed before then,
+the app still works from that clone, but the repository is being
+retired and will stop receiving new data.  Moving takes three steps;
+see =UPGRADE.org= for a step-by-step version written for people who
+have never used a terminal.
+
+1. Upgrade the package:
+   #+begin_src sh
+   pipx upgrade ucbfaculty
+   #+end_src
+2. Connect to Box and repoint the app.
+   - *macOS / Windows:* install Box Drive and open the data folder
+     once (see [[*Option 1: Box Drive (macOS / Windows, recommended)]]), then
+     #+begin_src sh
+     ucbfaculty init --force
+     #+end_src
+     which finds the folder inside Box Drive and rewrites the config.
+   - *Linux (or rclone anywhere):*
+     #+begin_src sh
+     ucbfaculty sync --backend rclone
+     #+end_src
+     which connects rclone to Box (CalNet sign-in), mirrors the folder
+     to =~/.ucbfaculty/data=, and rewrites the config to use it.
+   Either command keeps unrelated settings (for example a COMS sheet
+   key) and only replaces the data-directory entries.
+3. Delete the old clone (=~/RawData=), which is now just a stale copy
+   of confidential data.  Your GPG key and passphrase are unchanged.
+
+Until you do this, the app's Settings tab prints a reminder every
+time you click *Sync Data*.
 
 * Install the Application
 
@@ -246,8 +281,8 @@ your needs.
 A maintainer may provide a ready-to-run executable for macOS or
 Windows.  If you have received one:
 
-- *No other software required* (besides GPG and Git, covered above).
-  Python is bundled inside the binary.
+- *No other software required* (besides GPG and Box Drive, covered
+  above).  Python is bundled inside the binary.
 - Double-click (or run from the terminal) to launch.
 - Upgrades require downloading a new binary from the maintainer.
 
@@ -291,12 +326,13 @@ This gives you the =ucbfaculty= command.  To upgrade later:
 pipx upgrade ucbfaculty
 #+end_src
 
-*** From a local clone
+*** From a source checkout
 
 If you prefer to work from the source tree directly:
 
 #+begin_src sh
-cd ~/UCBFaculty                  # or wherever you cloned the repo
+git clone https://github.com/ligon/ucbfaculty.git ~/UCBFaculty
+cd ~/UCBFaculty
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install --upgrade pip
@@ -316,8 +352,9 @@ browser automatically.  It will:
 
 1. Check that GPG and a secret key are available.
 2. Show your public key (in case you still need to send it to Linda).
-3. Clone the private =RawData= repository (you may be prompted to
-   authenticate with GitHub).
+3. Get the data: detect the folder in Box Drive, or connect rclone to
+   Box and mirror the folder (you will be asked to sign in with
+   CalNet).
 4. Write =~/.ucbfaculty/config.yaml= with the correct paths.
 
 After setup completes, restart the app:
@@ -328,19 +365,19 @@ ucbfaculty --show
 
 Enter your GPG passphrase on the splash screen to unlock the data.
 
-** Already have a RawData clone? Skip the wizard.
+** Already have the data on disk? Skip the wizard.
 
-If you obtained =RawData= some other way (a colleague handed you a
-copy, you cloned it manually with SSH, etc.), you can write the
-config file directly from the terminal --- no browser, no clone:
+If the folder is already on your machine (Box Drive is set up, you
+ran =ucbfaculty sync=, a colleague handed you a copy, ...), you can
+write the config file directly from the terminal:
 
 #+begin_src sh
-ucbfaculty init --data-dir /path/to/RawData
+ucbfaculty init --data-dir /path/to/the/folder
 #+end_src
 
-If =RawData= lives at =~/RawData= or as a sibling of the UCBFaculty
-install, you can omit =--data-dir= and the command will find it
-automatically:
+If the folder is inside Box Drive, at =~/.ucbfaculty/data=, at
+=~/RawData=, or is a sibling of the UCBFaculty install, you can omit
+=--data-dir= and the command will find it automatically:
 
 #+begin_src sh
 ucbfaculty init
@@ -355,24 +392,31 @@ Either form writes =~/.ucbfaculty/config.yaml=, after which =ucbfaculty
 ucbfaculty --show
 #+end_src
 
-That is all.  The Settings tab inside the app lets you pull new data
-(=git pull=) and adjust configuration without returning to the
-terminal.
+That is all.  With Box Drive, new data arrives on its own.  With
+rclone, click *Sync Data* on the Settings tab inside the app (or run
+=ucbfaculty sync=) to pick up new files.
 
 * Troubleshooting
 
 - *"No secret key" when decrypting:* Your GPG key is missing or was
   generated under a different user account.  Re-run =gpg
   --full-generate-key= and send the new public key to Linda.
-- *Git authentication fails:* Re-run =gh auth login=, or check that
-  your Personal Access Token has not expired.  See [[*Authenticate with GitHub]]
-  for non-=gh= options.
-- *Setup wizard's "Download & Configure" tab is blank, or its Finish
+- *The Box folder is not in Box Drive:* Open the folder in a browser
+  once (Box Drive only shows shared folders you have visited), then
+  wait a minute for it to sync.  If it still does not appear, you may
+  not have been given access yet --- check with Linda.
+- *=ucbfaculty sync= says the authorisation has lapsed:* run
+  =rclone config reconnect ucbfaculty:= and sign in again.
+- *Setup wizard's "Get Data & Configure" tab is blank, or its Finish
   button stays greyed out:* run =ucbfaculty init= (or =ucbfaculty init
   --data-dir PATH=) from the terminal to write the config file
-  directly.  See [[*Already have a RawData clone? Skip the wizard.]].
+  directly.  See [[*Already have the data on disk? Skip the wizard.]].
 - *Wrong data paths:* Edit =~/.ucbfaculty/config.yaml= or delete it
   and re-run the app to get the Setup Assistant again.
+- *=ucbfaculty doctor= reports missing or undeclared files:* the local
+  copy is out of step with the archive.  Sync again; if the report
+  persists, tell the maintainer, since the archive itself may be
+  inconsistent.
 - *Port 5006 already in use:* Use =ucbfaculty --port 5007 --show= to
   pick a different port.
 

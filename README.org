@@ -56,6 +56,14 @@ controls from inside the UI.
 
 * Config keys
 - =data_directory=: base path for RawData assets.
+- =data_backend=: how =data_directory= is kept in step with its upstream:
+  =box-drive= (folder inside a Box Drive mount; nothing to sync),
+  =rclone= (mirror via rclone; see =rclone_remote=), or =git= (a
+  checkout; see =data_repo_url=).  Inferred when omitted; see
+  =ucbfaculty.datasync.detect_backend=.
+- =rclone_remote=: rclone source spec, e.g. =ucbfaculty:= (default; a Box
+  remote rooted at the shared folder) or =mybox:Some/Dir=.
+- =data_repo_url=: repository to clone when =data_backend= is =git=.
 - =features_yaml=: legacy FeatureBuilder spec (list or single path).
 - =feature_specs_yaml=: new Feature spec file for the Feature class (defaults to =RawData/features_spec.yaml=).
 - =sources_yaml=: source declarations powering the Feature class (defaults to =RawData/sources.yaml=).
@@ -88,6 +96,8 @@ Open the **Settings** tab inside the Panel app to:
 - View or edit the active =config.yaml= (data directory, feature specs,
   spelling dictionaries).  Saving regenerates the config file and applies
   it immediately—just refresh the data tabs afterward.
-- Trigger a “Sync RawData Repository” action, which runs =git pull
-  --ff-only= inside the configured data directory and reports the result
-  in-place.
+- Trigger a “Sync Data” action, which brings the configured data
+  directory up to date with its upstream (a no-op under Box Drive,
+  =rclone sync= for a mirror, =git pull --ff-only= for a checkout) and
+  reports the result in-place.  =ucbfaculty sync= does the same from
+  the terminal.

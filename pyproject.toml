@@ -17,7 +17,6 @@ dependencies = [
     "pandas>=2.3.2",
     "ligonlibrary>=0.1.6",
     "pyyaml>=6.0.2,<7.0.0",
-    "gitpython>=3.1.45,<4.0.0",
     "python-dateutil>=2.9.0,<3.0.0",
     "Levenshtein>=0.27.3,<0.28.0",
     "panel>=1.4.4,<2.0.0",

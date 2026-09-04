@@ -67,46 +67,52 @@ def unlock() -> None:
 
 
 def init_config(data_dir: Path | None, force: bool = False) -> None:
-    """Write ``~/.ucbfaculty/config.yaml`` for an existing RawData directory.
+    """Write ``~/.ucbfaculty/config.yaml`` for an existing data directory.
 
-    Non-GUI counterpart of the setup wizard, intended for users who already
-    have a RawData clone on disk (cloned manually via SSH, downloaded as a
-    tarball, copied from another machine, etc.) and just need the config
-    file pointing at it.
+    Non-GUI counterpart of the setup wizard, for users who already have
+    the archive on disk: inside a Box Drive mount, mirrored by
+    ``ucbfaculty sync``, or copied from somewhere else.
 
     Parameters
     ----------
     data_dir : Path or None
-        Path to the existing RawData directory.  If ``None``, the function
-        searches a small list of conventional locations: ``~/RawData`` and a
-        ``RawData`` sibling of the UCBFaculty package directory.
+        Path to the existing data directory.  If ``None``, the function
+        searches, in order: the shared folder inside a Box Drive mount,
+        the default rclone mirror (``~/.ucbfaculty/data``), ``~/RawData``,
+        and a ``RawData`` sibling of the UCBFaculty package directory.
     force : bool
         Overwrite an existing config.yaml if present.
     """
     import yaml
+    from ucbfaculty import datasync
 
     candidates: list[Path] = []
     if data_dir is not None:
         candidates.append(Path(data_dir).expanduser())
     else:
-        # Conventional locations: home dir, then a sibling of UCBFaculty.
+        box_dir = datasync.find_box_drive_data_dir()
+        if box_dir is not None:
+            candidates.append(box_dir)
+        candidates.append(datasync.DEFAULT_LOCAL_DIR)
         candidates.append(Path.home() / "RawData")
         ucbf_pkg_parent = Path(__file__).resolve().parent.parent.parent
         candidates.append(ucbf_pkg_parent / "RawData")
 
     resolved: Path | None = None
     for candidate in candidates:
-        if (candidate / "features_spec.yaml").exists():
+        if (candidate / datasync.MARKER_FILE).exists():
             resolved = candidate
             break
 
     if resolved is None:
-        print("Could not locate a RawData directory.")
+        print("Could not locate the data directory.")
         print("Looked in:")
         for candidate in candidates:
             marker = "exists" if candidate.exists() else "missing"
             print(f"  {candidate}  ({marker})")
-        print("\nPass --data-dir PATH to point at your RawData clone.")
+        print(f"\nThe archive lives in Box: {datasync.BOX_FOLDER_URL}")
+        print("Either install Box Drive and pass --data-dir PATH pointing inside")
+        print("the mounted folder, or run `ucbfaculty sync` to mirror it with rclone.")
         sys.exit(1)
 
     config_dir = Path.home() / ".ucbfaculty"
@@ -116,19 +122,16 @@ def init_config(data_dir: Path | None, force: bool = False) -> None:
         print("Re-run with --force to overwrite, or edit the file directly.")
         sys.exit(1)
 
-    config = {
-        "data_directory": str(resolved),
-        "feature_specs_yaml": [str(resolved / "features_spec.yaml")],
-        "sources_yaml": [str(resolved / "sources.yaml")],
-        "spelling_dictionary": str(resolved / "spelling_dictionary.json"),
-        "faculty_spellings": str(resolved / "faculty_spellings.json"),
-        "email_dictionary": str(resolved / "email_dictionary.json"),
-    }
+    config = _config_for_data_dir(resolved)
     config_dir.mkdir(parents=True, exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as handle:
         yaml.dump(config, handle)
     print(f"Wrote {config_path}")
     print(f"  data_directory: {resolved}")
+    if "data_backend" in config:
+        print(f"  data_backend:   {config['data_backend']}")
+    if "rclone_remote" in config:
+        print(f"  rclone_remote:  {config['rclone_remote']}")
 
     # On macOS / Windows, also drop a double-clickable launcher so the
     # user never has to open a terminal again.  Best-effort: failures
@@ -139,6 +142,145 @@ def init_config(data_dir: Path | None, force: bool = False) -> None:
         except (OSError, RuntimeError) as exc:
             print(f"\nNote: could not install launcher ({exc}).")
             print("Run `ucbfaculty install-launcher` manually if you want one.")
+
+
+def _config_for_data_dir(data_dir: Path, backend: str | None = None, repo_url: str | None = None) -> dict:
+    """Config payload for an archive rooted at *data_dir*.
+
+    Records ``data_backend`` (and ``rclone_remote`` / ``data_repo_url``
+    where relevant) so the Settings tab's sync button and
+    ``ucbfaculty sync`` know how to refresh the directory later.
+    """
+    from ucbfaculty import datasync
+
+    config = {
+        "data_directory": str(data_dir),
+        "feature_specs_yaml": [str(data_dir / "features_spec.yaml")],
+        "sources_yaml": [str(data_dir / "sources.yaml")],
+        "spelling_dictionary": str(data_dir / "spelling_dictionary.json"),
+        "faculty_spellings": str(data_dir / "faculty_spellings.json"),
+        "email_dictionary": str(data_dir / "email_dictionary.json"),
+    }
+    backend = backend or datasync.detect_backend({}, data_dir)
+    if backend in datasync.BACKENDS:
+        config["data_backend"] = backend
+    if backend == "rclone":
+        config["rclone_remote"] = datasync.remote_spec()
+    if backend == "git" and repo_url:
+        config["data_repo_url"] = repo_url
+    return config
+
+
+def sync_data(
+    data_dir: Path | None = None,
+    remote: str | None = None,
+    backend: str | None = None,
+    repo_url: str | None = None,
+    dry_run: bool = False,
+) -> None:
+    """Fetch or refresh the data archive (``ucbfaculty sync``).
+
+    One command does the whole Linux / headless setup: connect rclone
+    to Box if the remote is missing (interactive browser sign-in via
+    CalNet SSO), mirror the folder, and write ``config.yaml`` if there
+    is none yet.  On later runs it just refreshes the local copy.
+    ``--backend git --repo-url URL`` does the same for a git-hosted
+    archive; under Box Drive there is nothing to transfer.
+
+    Naming a backend explicitly (``--backend``, ``--remote`` or
+    ``--repo-url``) also *rewrites* an existing ``config.yaml`` to
+    match, so switching an installed user from one transport to
+    another is a single command.  Keys unrelated to the data
+    directory (for example ``coms_sheet_key``) are preserved.
+    """
+    from ucbfaculty import config_file, datasync, load_config
+
+    try:
+        config = load_config()
+    except FileNotFoundError:
+        config = {}
+    existing = dict(config)
+    reconfigure = bool(backend or remote or repo_url)
+    if remote:
+        config["rclone_remote"] = remote
+    if repo_url:
+        config["data_repo_url"] = repo_url
+    if backend:
+        config["data_backend"] = backend
+
+    if data_dir is None:
+        if backend == "box-drive":
+            data_dir = datasync.find_box_drive_data_dir()
+        if data_dir is None:
+            data_dir = Path(config.get("data_directory") or datasync.DEFAULT_LOCAL_DIR)
+        if backend == "rclone" and datasync.is_box_drive_path(data_dir):
+            data_dir = datasync.DEFAULT_LOCAL_DIR
+        if backend == "rclone" and (Path(data_dir) / ".git").exists():
+            # Switching a git checkout to a mirror: use the default
+            # mirror location rather than syncing over the checkout.
+            data_dir = datasync.DEFAULT_LOCAL_DIR
+    data_dir = Path(data_dir).expanduser()
+    backend = datasync.detect_backend(config, data_dir)
+    if backend == "none":
+        # Nothing configured anywhere: the default deployment is Box via rclone.
+        backend = "rclone"
+        config["data_backend"] = backend
+
+    echo = lambda line: print(line, end="")  # noqa: E731
+
+    if backend == "rclone":
+        if datasync.rclone_path() is None:
+            print("rclone is not installed.  Install it from https://rclone.org/install/")
+            print("(on macOS / Windows, Box Drive is the alternative: point the data")
+            print(f"directory at the mounted copy of {datasync.BOX_FOLDER_URL}).")
+            sys.exit(1)
+        remote_name = datasync.remote_spec(config).split(":", 1)[0]
+        if not datasync.rclone_remote_exists(remote_name):
+            if remote_name != datasync.DEFAULT_REMOTE:
+                print(f"rclone remote {remote_name!r} is not configured; run `rclone config`.")
+                sys.exit(1)
+            print(f"Connecting rclone remote {remote_name!r} to Box folder {datasync.BOX_FOLDER_ID}.")
+            print("A browser sign-in will open; choose 'Sign in with SSO' for CalNet.\n")
+            ok, message = datasync.create_rclone_remote(name=remote_name, log=echo)
+            print(message)
+            if not ok:
+                sys.exit(1)
+        if dry_run:
+            ok, message = datasync.rclone_sync(
+                datasync.remote_spec(config), data_dir, dry_run=True, log=echo,
+            )
+            print(message)
+            sys.exit(0 if ok else 1)
+
+    ok, message = datasync.fetch_data_directory(config, data_dir, backend=backend, log=echo)
+    print(message)
+    if not ok:
+        sys.exit(1)
+
+    if (not config_file.exists() or reconfigure) and (data_dir / datasync.MARKER_FILE).exists():
+        import yaml
+
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        payload = _config_for_data_dir(
+            data_dir, backend=backend, repo_url=config.get("data_repo_url"),
+        )
+        if config.get("rclone_remote"):
+            payload["rclone_remote"] = datasync.remote_spec(config)
+        # Carry over unrelated keys; drop transport keys that belong to
+        # the backend being switched away from.
+        stale = {"data_backend", "rclone_remote", "data_repo_url"}
+        merged = {k: v for k, v in existing.items() if k not in stale}
+        merged.update(payload)
+        with open(config_file, "w", encoding="utf-8") as handle:
+            yaml.dump(merged, handle)
+        print(("Rewrote " if existing else "Wrote ") + str(config_file))
+        print(f"  data_directory: {data_dir}")
+        print(f"  data_backend:   {merged.get('data_backend')}")
+        if sys.platform in ("darwin", "win32"):
+            try:
+                _install_launcher(dest=None, force=False)
+            except (OSError, RuntimeError, SystemExit) as exc:
+                print(f"\nNote: could not install launcher ({exc}).")
 
 
 def _install_launcher(dest: Path | None, force: bool) -> None:
@@ -315,8 +457,9 @@ def build_parser() -> argparse.ArgumentParser:
     Returns
     -------
     argparse.ArgumentParser
-        Configured parser supporting ``serve``, ``panel``, and
-        ``info`` sub-commands, plus server and passphrase options.
+        Configured parser supporting ``serve``, ``panel``, ``info``,
+        ``unlock``, ``init``, ``sync``, ``install-launcher`` and
+        ``doctor`` sub-commands, plus server and passphrase options.
     """
     from ucbfaculty import __version__
 
@@ -333,7 +476,7 @@ def build_parser() -> argparse.ArgumentParser:
         "command",
         nargs="?",
         default="serve",
-        choices=("serve", "panel", "info", "unlock", "init", "install-launcher", "doctor"),
+        choices=("serve", "panel", "info", "unlock", "init", "sync", "install-launcher", "doctor"),
         help="Command to execute (default: serve).",
     )
     parser.add_argument(
@@ -365,9 +508,34 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--data-dir",
         default=None,
-        help="(init only) Path to an existing RawData directory.  "
-        "If omitted, ~/RawData and a RawData sibling of the install "
-        "are searched.",
+        help="(init, sync) Path to the data directory.  For init, an existing "
+        "archive (Box Drive mounts, ~/.ucbfaculty/data, ~/RawData and a "
+        "RawData sibling of the install are searched if omitted).  For "
+        "sync, where rclone mirrors the Box folder (default: the configured "
+        "data_directory, else ~/.ucbfaculty/data).",
+    )
+    parser.add_argument(
+        "--remote",
+        default=None,
+        help="(sync only) rclone remote spec for the archive, e.g. "
+        "'ucbfaculty:' (default) or 'mybox:Some/Folder'.",
+    )
+    parser.add_argument(
+        "--backend",
+        default=None,
+        choices=("box-drive", "rclone", "git"),
+        help="(sync only) Transport for the data archive.  Default: whatever "
+        "config.yaml says, else inferred (see ucbfaculty.datasync).",
+    )
+    parser.add_argument(
+        "--repo-url",
+        default=None,
+        help="(sync only, git backend) Repository to clone the archive from.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="(sync only, rclone backend) Show what would change without changing it.",
     )
     parser.add_argument(
         "--force",
@@ -428,6 +596,15 @@ def main(argv: Sequence[str] | None = None) -> None:
         init_config(
             data_dir=Path(args.data_dir).expanduser() if args.data_dir else None,
             force=args.force,
+        )
+        return
+    if args.command == "sync":
+        sync_data(
+            data_dir=Path(args.data_dir).expanduser() if args.data_dir else None,
+            remote=args.remote,
+            backend=args.backend,
+            repo_url=args.repo_url,
+            dry_run=args.dry_run,
         )
         return
     if args.command == "install-launcher":

@@ -477,8 +477,8 @@ def load_coms_tracking(workbook, year="2025-26", drop_unmatched=False):
     return result
 
 import os
+from datetime import datetime
 from functools import cached_property
-from git import Repo
 from ucbfaculty import datadir
 
 class RawData:
@@ -515,19 +515,23 @@ class RawData:
 
         Returns:
             str: The accession date in 'YYYY-MM-DD' format if available, None otherwise.
-                 If not explicitly set, attempts to retrieve from git commit history.
+                 If not explicitly set, falls back to the file's modification
+                 time in the data directory.  (Authoritative accession dates
+                 live in ``sources.yaml`` as ``_accessioned``; the archive is
+                 no longer a git repository, so there is no commit history to
+                 consult.)
         """
         if self._AccessionDate is not None:
             return self._AccessionDate
 
         try:
-            repo = Repo(search_parent_directories=True)
-            commits = list(repo.iter_commits(paths=self.FileName))
-            if commits:
-                # The first commit in the list is the latest modification date
-                return commits[0].committed_datetime.strftime('%Y-%m-%d')
+            if self.FileName:
+                path = Path(self.FileName)
+                if not path.is_absolute():
+                    path = Path(datadir) / path
+                return datetime.fromtimestamp(path.stat().st_mtime).strftime('%Y-%m-%d')
         except Exception as exc:
-            logger.debug("Failed to resolve git modification date for %s: %s", self.FileName, exc)
+            logger.debug("Failed to resolve modification date for %s: %s", self.FileName, exc)
 
         return None
 

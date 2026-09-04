@@ -520,22 +520,19 @@ def _load_config_payload() -> dict[str, Any]:
 
 
 def _sync_rawdata_directory() -> tuple[bool, str]:
-    """Run git pull inside the configured RawData directory."""
+    """Bring the configured data directory up to date with its upstream.
+
+    Delegates to :func:`ucbfaculty.datasync.sync_data_directory`: a
+    no-op under Box Drive, ``rclone sync`` for a mirror, ``git pull``
+    for a checkout.
+    """
+    from ucbfaculty import datasync
+
     path = uc.datadir
-    if not path.exists():
+    config = _load_config_payload()
+    if not path.exists() and datasync.detect_backend(config, path) != "rclone":
         return False, f"Data directory not found: {path}"
-    if not (path / ".git").exists():
-        return False, f"No git repository detected at {path}"
-    command = ["git", "-C", str(path), "pull", "--ff-only"]
-    try:
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
-    except FileNotFoundError:
-        return False, "git executable not found on PATH."
-    if result.returncode != 0:
-        message = result.stderr.strip() or "git pull failed."
-        return False, message
-    output = result.stdout.strip() or "Already up to date."
-    return True, output
+    return datasync.sync_data_directory(config, path)
 
 
 def build_splash_view(on_accept: Callable[[dict[str, str]], None]) -> pn.viewable.Viewable:
@@ -1273,7 +1270,7 @@ def build_settings_view() -> pn.viewable.Viewable:
 
     save_button.on_click(_handle_save)
 
-    sync_button = pn.widgets.Button(name="Sync Repository", button_type="primary", width=220, height=40)
+    sync_button = pn.widgets.Button(name="Sync Data", button_type="primary", width=220, height=40)
     sync_button.sizing_mode = "fixed"
     sync_status = pn.pane.Markdown("", sizing_mode="stretch_width")
 

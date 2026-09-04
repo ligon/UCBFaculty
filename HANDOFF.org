@@ -18,6 +18,50 @@ diagnostic copy, and a poetry-dynamic-versioning setup --- summarised
 in [[*Ethan's parallel commits]] so the next agent sees the full
 picture.
 
+* Update 2026-09-03: data distribution moved from GitHub to Box
+
+The "keep =RawData= private on github.com" half of the plan below was
+overtaken by campus policy: the archive is protection-level 3 data,
+Box is approved for that level and GitHub is not.  The archive now
+lives in https://berkeley.app.box.com/folder/410604666843 and the
+package fetches it from there.  What changed (see the session commit
+for the diff):
+
+- New =ucbfaculty/datasync.py= with three interchangeable backends
+  (=box-drive=, =rclone=, =git=) behind =fetch_data_directory= /
+  =sync_data_directory=; config keys =data_backend=, =rclone_remote=,
+  =data_repo_url=.  The git backend stays so the package remains
+  generic; Berkeley's deployment is Box.
+- New =ucbfaculty sync= CLI command (one-shot Linux/headless setup:
+  create the rclone remote via CalNet SSO, mirror, write config);
+  =ucbfaculty init= now finds the folder inside Box Drive mounts.
+- Setup wizard tab 2 and the Settings tab "Sync Data" button use the
+  same module; no =git clone= / =git pull= in the package any more.
+- =gitpython= dependency dropped (its only use was a dead
+  =RawData.AccessionDate= fallback; =_accessioned= in =sources.yaml=
+  is authoritative).
+- =RawData/scripts/publish-to-box.sh= is the maintainer's publish
+  step (dry run by default; =--go= to publish).  The local RawData git
+  checkout remains the maintainer's history; Box is the distribution
+  copy.  =Proposed*/= and plaintext spreadsheets never travel.
+- INSTALL.org rewritten: no GitHub account, no git; Box Drive or
+  rclone instead.
+- Upgrade path for pre-Box installs: INSTALL.org "Upgrading from the
+  GitHub-based setup" (=pipx upgrade ucbfaculty= then =ucbfaculty init
+  --force= on Mac/Windows with Box Drive, or =ucbfaculty sync
+  --backend rclone= on Linux; an explicit =--backend= rewrites an
+  existing config).  =UPGRADE.org= is the emailable, no-jargon
+  version for committee users.  A git checkout whose origin is the
+  retired GitHub repo gets a Box pointer appended to every sync
+  result.
+- Box folder renamed to "COMS Faculty Data" (id unchanged, so nothing
+  in code or configs moved).
+
+Still to do by hand: delete (or at least make private and archive)
+=github.com/ligon/RawData= once every user has migrated, and remove
+the =origin= remote from the local checkout so nothing pushes there
+by reflex.
+
 * The plan we converged on
 
 Move UCBFaculty's distribution off private GitHub onto a fully public
@@ -31,7 +75,8 @@ Alternatives considered and rejected (see commit / chat history for
 reasoning):
 - Box / bConnected Drive for =RawData= --- adds streaming-vs-mirror
   configuration failure modes; gives no benefit over =git pull= which
-  already works.
+  already works.  /(Reversed 2026-09-03 on policy grounds; see the
+  update at the top of this file.)/
 - =github.berkeley.edu= (Enterprise GitHub + CalNet) --- SAML SSO
   requires recurring re-authorization on every key/token after each
   CalNet session expires; too much friction for committee users.

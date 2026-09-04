@@ -1,8 +1,17 @@
 """First-run setup wizard.
 
-Checks prerequisites (GPG installed, secret key present), clones or
-updates the RawData repository, and writes a minimal config file so the
-main lookup app can start.
+Checks prerequisites (GPG installed, secret key present), gets the
+confidential data archive onto the machine, and writes a minimal
+config file so the main lookup app can start.
+
+The archive is hosted in a shared Box folder.  The wizard offers the
+three transports :mod:`ucbfaculty.datasync` knows about:
+
+- **Box Drive** (macOS / Windows): the folder is already on disk once
+  Box Drive is installed and signed in; the wizard finds it.
+- **rclone** (any platform, and the only option on Linux): connect an
+  rclone remote to the Box folder, then mirror it locally.
+- **git**: for deployments that host the archive in a git repository.
 """
 
 import shutil
@@ -11,6 +20,8 @@ from pathlib import Path
 
 import panel as pn
 import yaml
+
+from ucbfaculty import datasync
 
 
 # ---------------------------------------------------------------------------
@@ -51,6 +62,30 @@ def _export_public_key(uid: str) -> str:
     return res.stdout if res.returncode == 0 else ""
 
 
+def _config_payload(target: Path, backend: str, repo_url: str = "") -> dict:
+    config = {
+        "data_directory": str(target),
+        "feature_specs_yaml": [str(target / "features_spec.yaml")],
+        "sources_yaml": [str(target / "sources.yaml")],
+        "spelling_dictionary": str(target / "spelling_dictionary.json"),
+        "faculty_spellings": str(target / "faculty_spellings.json"),
+        "email_dictionary": str(target / "email_dictionary.json"),
+        "data_backend": backend,
+    }
+    if backend == "rclone":
+        config["rclone_remote"] = datasync.remote_spec()
+    if backend == "git" and repo_url:
+        config["data_repo_url"] = repo_url
+    return config
+
+
+BACKEND_LABELS = {
+    "box-drive": "Box Drive (macOS / Windows)",
+    "rclone": "rclone (any platform)",
+    "git": "git repository",
+}
+
+
 # ---------------------------------------------------------------------------
 # View
 # ---------------------------------------------------------------------------
@@ -58,22 +93,19 @@ def _export_public_key(uid: str) -> str:
 def setup_view():
     pn.extension(design="material", notifications=True)
 
-    home = Path.home()
-    default_data_dir = home / "RawData"
-
     # ---- Tab 1: Prerequisites --------------------------------------------
     gpg_ok = _gpg_installed()
     secret_keys = _gpg_secret_keys()
 
     gpg_alert = pn.pane.Alert(
-        "\u2705 GPG is installed." if gpg_ok
-        else "\u26a0\ufe0f **GPG is not installed.** Please install it before continuing.",
+        "✅ GPG is installed." if gpg_ok
+        else "⚠️ **GPG is not installed.** Please install it before continuing.",
         alert_type="success" if gpg_ok else "danger",
     )
     key_alert = pn.pane.Alert(
-        f"\u2705 Found {len(secret_keys)} secret key(s)." if secret_keys
+        f"✅ Found {len(secret_keys)} secret key(s)." if secret_keys
         else (
-            "\u26a0\ufe0f **No GPG secret keys found.** "
+            "⚠️ **No GPG secret keys found.** "
             "Generate one with `gpg --full-generate-key` and restart."
         ),
         alert_type="success" if secret_keys else "warning",
@@ -101,69 +133,173 @@ def setup_view():
         pub_key_area,
     )
 
-    # ---- Tab 2: Clone data & save config ---------------------------------
-    repo_input = pn.widgets.TextInput(
-        name="Repository URL",
-        value="https://github.com/ligon/RawData",
-    )
-    path_input = pn.widgets.TextInput(
-        name="Local Directory",
-        value=str(default_data_dir),
-    )
-    clone_log = pn.widgets.Terminal(
-        height=150, sizing_mode="stretch_width", visible=False,
+    # ---- Tab 2: Get the data & save config -------------------------------
+    box_drive_dir = datasync.find_box_drive_data_dir()
+    have_box_drive = bool(datasync.box_drive_roots())
+    have_rclone = datasync.rclone_path() is not None
+    remote_connected = have_rclone and datasync.rclone_remote_exists()
+
+    if box_drive_dir is not None:
+        initial_backend = "box-drive"
+    elif have_rclone or not have_box_drive:
+        initial_backend = "rclone"
+    else:
+        initial_backend = "box-drive"
+
+    backend_select = pn.widgets.RadioBoxGroup(
+        name="How will this machine get the data?",
+        options=list(BACKEND_LABELS.values()),
+        value=BACKEND_LABELS[initial_backend],
     )
 
-    clone_btn = pn.widgets.Button(name="Clone / Sync Data", button_type="primary")
+    def _backend() -> str:
+        for key, label in BACKEND_LABELS.items():
+            if label == backend_select.value:
+                return key
+        return "rclone"
+
+    path_input = pn.widgets.TextInput(
+        name="Local Directory",
+        value=str(box_drive_dir or datasync.DEFAULT_LOCAL_DIR),
+    )
+    repo_input = pn.widgets.TextInput(
+        name="Repository URL (git only)",
+        value="",
+        placeholder="https://... or git@...:org/repo.git",
+        visible=False,
+    )
+    log_widget = pn.widgets.Terminal(
+        height=180, sizing_mode="stretch_width", visible=False,
+    )
+
+    status_md = pn.pane.Markdown("", sizing_mode="stretch_width")
+    connect_btn = pn.widgets.Button(
+        name="Connect rclone to Box (sign in with CalNet)", button_type="default",
+    )
+    fetch_btn = pn.widgets.Button(name="Download / Sync Data", button_type="primary")
     finish_btn = pn.widgets.Button(
         name="Save Config & Finish", button_type="success", disabled=True,
     )
 
-    def _run_clone(event):
-        target = Path(path_input.value).expanduser()
+    box_drive_help = pn.pane.Markdown(
+        "**Box Drive** keeps the shared folder on your disk automatically.\n\n"
+        "1. Install [Box Drive](https://www.box.com/resources/downloads) and sign in "
+        "with your `@berkeley.edu` address (CalNet).\n"
+        f"2. Open the [data folder in Box]({datasync.BOX_FOLDER_URL}) once, so it appears "
+        "under your Box Drive folder.\n"
+        "3. Point *Local Directory* at that folder.  If the wizard found it, "
+        "the path is already filled in.\n",
+        sizing_mode="stretch_width",
+    )
+    rclone_help = pn.pane.Markdown(
+        "**rclone** mirrors the Box folder into a local directory.\n\n"
+        "1. Install [rclone](https://rclone.org/install/) if it is missing.\n"
+        "2. Click *Connect rclone to Box*.  A browser sign-in opens (or a link "
+        "appears in the log below); choose **Sign in with SSO** to use CalNet.\n"
+        "3. Click *Download / Sync Data*.  Re-run the same step later from the "
+        "app's Settings tab to pick up new data.\n",
+        sizing_mode="stretch_width",
+    )
+    git_help = pn.pane.Markdown(
+        "**git**: clone (or pull) an archive hosted in a git repository.  "
+        "Enter the repository URL; you may be prompted to authenticate.\n",
+        sizing_mode="stretch_width",
+    )
 
-        if target.exists() and any(target.iterdir()) and not (target / ".git").exists():
-            pn.state.notifications.error("Directory exists and is not a git repo.")
-            return
-
-        clone_btn.loading = True
-        clone_log.visible = True
-        clone_log.clear()
-
-        if target.exists() and (target / ".git").exists():
-            cmd = ["git", "-C", str(target), "pull"]
-            clone_log.write("Pulling latest changes...\n")
-        else:
-            cmd = ["git", "clone", repo_input.value, str(target)]
-            clone_log.write(f"Cloning {repo_input.value}...\n")
-
-        try:
-            res = subprocess.run(cmd, capture_output=True, text=True)
-            clone_log.write(res.stdout)
-            if res.stderr:
-                clone_log.write(res.stderr)
-            if res.returncode == 0:
-                pn.state.notifications.success("Repository synced.")
-                finish_btn.disabled = False
+    def _refresh_status(*_events) -> None:
+        backend = _backend()
+        box_drive_help.visible = backend == "box-drive"
+        rclone_help.visible = backend == "rclone"
+        git_help.visible = backend == "git"
+        repo_input.visible = backend == "git"
+        connect_btn.visible = backend == "rclone"
+        fetch_btn.visible = backend != "box-drive"
+        fetch_btn.name = "Clone / Pull Data" if backend == "git" else "Download / Sync Data"
+        lines = []
+        if backend == "box-drive":
+            if not have_box_drive:
+                lines.append("⚠️ No Box Drive folder was found on this machine.")
+            elif box_drive_dir is None:
+                lines.append(
+                    "⚠️ Box Drive is installed but the data folder was not found "
+                    "inside it yet.  Open the folder in Box once, wait for it to sync, "
+                    "then re-check."
+                )
             else:
-                pn.state.notifications.error("Git operation failed. See log above.")
-        except Exception as exc:
-            clone_log.write(f"Error: {exc}\n")
-        finally:
-            clone_btn.loading = False
+                lines.append(f"✅ Found the data folder at `{box_drive_dir}`.")
+        elif backend == "rclone":
+            if not have_rclone:
+                lines.append("⚠️ rclone is not installed.")
+            elif datasync.rclone_remote_exists():
+                lines.append(f"✅ rclone remote `{datasync.DEFAULT_REMOTE}` is connected to Box.")
+            else:
+                lines.append("rclone is installed; connect it to Box to continue.")
+        status_md.object = "  \n".join(lines)
+        _refresh_finish_state()
 
-    clone_btn.on_click(_run_clone)
+    def _refresh_finish_state(*_events) -> None:
+        try:
+            candidate = Path(path_input.value).expanduser()
+        except (TypeError, ValueError):
+            finish_btn.disabled = True
+            return
+        finish_btn.disabled = not (candidate / datasync.MARKER_FILE).exists()
+
+    def _log(line: str) -> None:
+        log_widget.visible = True
+        log_widget.write(line)
+
+    def _run_connect(event):
+        connect_btn.loading = True
+        log_widget.clear()
+        try:
+            ok, message = datasync.create_rclone_remote(log=_log)
+            if ok:
+                pn.state.notifications.success(message)
+            else:
+                pn.state.notifications.error("Could not connect rclone to Box. See log.")
+                _log(message + "\n")
+        finally:
+            connect_btn.loading = False
+            _refresh_status()
+
+    def _run_fetch(event):
+        backend = _backend()
+        target = Path(path_input.value).expanduser()
+        if backend == "git" and not repo_input.value.strip():
+            pn.state.notifications.error("Enter the repository URL first.")
+            return
+        if (
+            target.exists()
+            and any(target.iterdir())
+            and not (target / datasync.MARKER_FILE).exists()
+            and not (target / ".git").exists()
+        ):
+            pn.state.notifications.error(
+                "Directory exists, is not empty, and does not look like the data archive."
+            )
+            return
+        fetch_btn.loading = True
+        log_widget.clear()
+        config = _config_payload(target, backend, repo_input.value.strip())
+        try:
+            ok, message = datasync.fetch_data_directory(
+                config, target, backend=backend, log=_log,
+            )
+            if ok:
+                pn.state.notifications.success("Data is up to date.")
+            else:
+                pn.state.notifications.error("Download failed. See log.")
+                _log(message + "\n")
+        except Exception as exc:  # noqa: BLE001
+            _log(f"Error: {exc}\n")
+        finally:
+            fetch_btn.loading = False
+            _refresh_finish_state()
 
     def _save_config(event):
         target = Path(path_input.value).expanduser()
-        config = {
-            "data_directory": str(target),
-            "feature_specs_yaml": [str(target / "features_spec.yaml")],
-            "sources_yaml": [str(target / "sources.yaml")],
-            "spelling_dictionary": str(target / "spelling_dictionary.json"),
-            "faculty_spellings": str(target / "faculty_spellings.json"),
-            "email_dictionary": str(target / "email_dictionary.json"),
-        }
+        config = _config_payload(target, _backend(), repo_input.value.strip())
         config_dir = Path.home() / ".ucbfaculty"
         config_dir.mkdir(parents=True, exist_ok=True)
         config_path = config_dir / "config.yaml"
@@ -172,36 +308,33 @@ def setup_view():
         pn.state.notifications.success(
             f"Config saved to {config_path}. Restart the app to continue."
         )
-        finish_btn.name = "Saved \u2014 restart the app"
+        finish_btn.name = "Saved — restart the app"
         finish_btn.disabled = True
 
+    connect_btn.on_click(_run_connect)
+    fetch_btn.on_click(_run_fetch)
     finish_btn.on_click(_save_config)
-
-    # Enable Finish whenever the current path_input value points at a
-    # directory that already contains features_spec.yaml.  This lets users
-    # who already have a RawData clone (at any location) skip the clone
-    # step entirely.
-    def _refresh_finish_state(*_events):
-        try:
-            candidate = Path(path_input.value).expanduser()
-        except (TypeError, ValueError):
-            finish_btn.disabled = True
-            return
-        finish_btn.disabled = not (candidate / "features_spec.yaml").exists()
-
+    backend_select.param.watch(_refresh_status, "value")
     path_input.param.watch(_refresh_finish_state, "value")
-    _refresh_finish_state()
+    _refresh_status()
 
     data_tab = pn.Column(
         pn.pane.Markdown(
-            "### Download Data\n\n"
-            "Clone (or update) the confidential data repository.  "
-            "You may be prompted to sign in to GitHub.\n"
+            "### Get the Data\n\n"
+            "The confidential data lives in a shared "
+            f"[Box folder]({datasync.BOX_FOLDER_URL}).  You need to have been "
+            "given access to it (ask the committee chair).  Choose how this "
+            "machine will keep a copy:\n"
         ),
+        backend_select,
+        box_drive_help,
+        rclone_help,
+        git_help,
+        status_md,
         repo_input,
         path_input,
-        clone_btn,
-        clone_log,
+        pn.Row(connect_btn, fetch_btn),
+        log_widget,
         finish_btn,
     )
 
@@ -211,7 +344,7 @@ def setup_view():
     # real first-install attempt.
     tabs = pn.Tabs(
         ("1. Prerequisites", prereq_tab),
-        ("2. Download & Configure", data_tab),
+        ("2. Get Data & Configure", data_tab),
     )
 
     return pn.template.FastListTemplate(
